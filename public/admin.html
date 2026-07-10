@@ -74,6 +74,12 @@
   .sub-table td{padding:8px 10px;border-bottom:1px solid var(--line)}
   .center-msg{max-width:520px;margin:80px auto;text-align:center}
   .center-msg .big{font-size:34px;margin-bottom:12px}
+  .rename-btn{
+    font-size:12px;font-weight:600;color:var(--muted);vertical-align:middle;
+    border:1px solid var(--line);border-radius:8px;padding:5px 10px;margin-left:10px;
+    background:var(--panel);transition:all .15s;
+  }
+  .rename-btn:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
 </style>
 </head>
 <body>
@@ -146,13 +152,16 @@ function mediaStrip(media){
       :`<img src="${esc(m.src)}" loading="lazy" alt="">`}</div>`).join('')}</div>`;
 }
 
+const displayName=v=>v.venue_name||v.email;
+
 function renderRail(){
   const rail=document.getElementById('rail');
   const lastSub={};
   (DATA.submissions||[]).forEach(s=>{if(!lastSub[s.email])lastSub[s.email]=s.submitted_at;});
   rail.innerHTML=`<div class="rail-label">Venues (${DATA.venues.length})</div>`+
     DATA.venues.map(v=>`<button class="rail-item ${selected===v.email?'active':''}" data-venue="${esc(v.email)}">
-      <span class="v-email">${esc(v.email)}</span>
+      <span class="v-email">${esc(displayName(v))}</span>
+      ${v.venue_name?`<span class="v-meta" style="word-break:break-all">${esc(v.email)}</span>`:''}
       <span class="v-meta">updated ${fmtTs(v.updated_at)}${lastSub[v.email]?` · <span class="sub">submitted ${fmtTs(lastSub[v.email])}</span>`:''}</span>
     </button>`).join('')+
     `<div style="height:14px"></div>
@@ -161,8 +170,10 @@ function renderRail(){
 
 function renderVenue(v){
   const d=v.data||{};
-  let html=`<div class="panel-title">${esc(v.email)}</div>
-    <div class="panel-sub">Last saved ${fmtTs(v.updated_at)} · read-only view of exactly what they entered</div>`;
+  let html=`<div class="panel-title">${esc(displayName(v))}
+      <button class="rename-btn" data-rename="${esc(v.email)}" title="Rename this venue">✏️ Rename</button>
+    </div>
+    <div class="panel-sub">${v.venue_name?esc(v.email)+' · ':''}Last saved ${fmtTs(v.updated_at)} · read-only view of exactly what they entered</div>`;
 
   // Weekly
   html+=`<div class="section-h">Weekly Promos</div>`;
@@ -254,9 +265,28 @@ function render(){
 }
 
 document.addEventListener('click',e=>{
+  const r=e.target.closest('[data-rename]');
+  if(r){renameVenue(r.dataset.rename);return;}
   const b=e.target.closest('[data-venue]');
   if(b){selected=b.dataset.venue;render();}
 });
+
+async function renameVenue(email){
+  const v=DATA.venues.find(v=>v.email===email);
+  if(!v)return;
+  const name=prompt('Venue name for '+email+'\n(leave blank to go back to showing the email)', v.venue_name||'');
+  if(name===null)return; // cancelled
+  try{
+    const res=await fetch('/api/admin',{method:'PUT',headers:{'content-type':'application/json'},
+      body:JSON.stringify({email, name})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const out=await res.json();
+    v.venue_name=out.name;
+    render();
+  }catch(err){
+    alert('Couldn’t save the name — try again. ('+err.message+')');
+  }
+}
 
 (async function boot(){
   try{
