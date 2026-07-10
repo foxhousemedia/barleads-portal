@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BarLeads — Client Portal</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --panel:#ffffff;
+    --rail:#17181d;
+    --rail-hover:#22242c;
+    --ink:#16181d;
+    --muted:#6b7280;
+    --line:#e6e8ec;
+    --accent:#f5a623;
+    --accent-deep:#e8890c;
+    --accent-soft:#fff4e0;
+    --green:#16a34a;
+    --red:#dc2626;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,18,24,.05),0 8px 24px -12px rgba(16,18,24,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font:inherit;color:inherit}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:24px;
+    background:var(--rail);color:#fff;
+    padding:0 20px;height:60px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:210px}
+  .brand-mark{
+    width:32px;height:32px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,#ffc95e,#e8890c);
+    display:grid;place-items:center;color:#17181d;font-weight:800;font-size:16px;
+    box-shadow:0 2px 8px rgba(245,166,35,.45);
+  }
+  .brand-name{font-weight:700;font-size:16px;letter-spacing:-.2px}
+  .brand-name em{font-style:normal;color:var(--accent)}
+  .brand-sub{font-size:11px;color:#9aa0ab;margin-top:1px}
+
+  .tabs{display:flex;gap:4px;background:rgba(255,255,255,.07);padding:4px;border-radius:12px}
+  .tab{
+    padding:8px 20px;border-radius:9px;font-weight:600;font-size:13.5px;color:#b9bec8;
+    transition:all .18s ease;
+  }
+  .tab:hover{color:#fff}
+  .tab.active{background:var(--accent);color:#17181d}
+
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .save-state{font-size:12px;color:#8b919c;display:flex;align-items:center;gap:6px}
+  .save-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .save-state.saving .save-dot{background:var(--accent)}
+  .btn-submit{
+    background:var(--accent);color:#17181d;font-weight:700;font-size:13.5px;
+    padding:9px 18px;border-radius:10px;transition:all .15s;
+  }
+  .btn-submit:hover{background:#ffb840;transform:translateY(-1px)}
+
+  /* ---------- Shell ---------- */
+  .shell{display:flex;min-height:calc(100vh - 60px)}
+
+  /* ---------- Left rail ---------- */
+  .rail{
+    width:232px;flex:none;background:var(--rail);color:#c6cad2;
+    padding:18px 12px 24px;
+  }
+  .rail-label{
+    font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:#6f7580;padding:0 12px 10px;
+  }
+  .rail-item{
+    display:flex;align-items:center;justify-content:space-between;width:100%;
+    padding:10px 12px;border-radius:10px;font-weight:500;font-size:13.5px;
+    color:#c6cad2;transition:all .13s;text-align:left;margin-bottom:2px;
+    border-left:3px solid transparent;
+  }
+  .rail-item:hover{background:var(--rail-hover);color:#fff}
+  .rail-item.active{background:var(--rail-hover);color:#fff;border-left-color:var(--accent)}
+  .rail-badge{
+    min-width:22px;height:20px;padding:0 6px;border-radius:20px;
+    background:rgba(255,255,255,.1);color:#9aa0ab;
+    font-size:11px;font-weight:700;display:grid;place-items:center;
+  }
+  .rail-item.active .rail-badge,.rail-badge.has{background:var(--accent);color:#17181d}
+  .year-row{padding:4px 12px 16px}
+  .year-select{
+    width:100%;background:var(--rail-hover);color:#fff;border:1px solid #33363f;
+    border-radius:10px;padding:8px 10px;font-weight:600;font-size:13px;outline:none;
+  }
+
+  /* ---------- Main panel ---------- */
+  .panel{flex:1;padding:32px 40px 80px;max-width:980px}
+  .panel-head{margin-bottom:24px}
+  .panel-title{font-size:24px;font-weight:800;letter-spacing:-.4px}
+  .panel-sub{color:var(--muted);margin-top:4px;font-size:13.5px}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;
+    transition:border-color .15s;
+  }
+  .card:focus-within{border-color:#d9c39a}
+
+  /* Weekly promo item */
+  .promo-item{display:flex;gap:18px;padding:18px}
+  .promo-fields{flex:1;display:flex;flex-direction:column;gap:10px}
+  .f-input{
+    width:100%;border:1px solid var(--line);border-radius:10px;background:#fbfbfc;
+    padding:10px 12px;outline:none;transition:all .15s;
+  }
+  .f-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(245,166,35,.15)}
+  .f-title{font-weight:600;font-size:15px}
+  .f-details{resize:vertical;min-height:52px;font-size:13px;color:#374151}
+  .promo-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+
+  .dropzone{
+    width:150px;height:104px;flex:none;border-radius:10px;
+    border:1.5px dashed #d3d6dc;background:#fafafb;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    color:#9aa0ab;font-size:11.5px;font-weight:500;text-align:center;
+    cursor:pointer;transition:all .15s;position:relative;overflow:hidden;
+  }
+  .dropzone:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+  .dropzone.dragover{border-color:var(--accent);background:var(--accent-soft)}
+  .dropzone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .dz-remove{
+    position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:8px;
+    background:rgba(23,24,29,.75);color:#fff;font-size:13px;line-height:1;
+    display:grid;place-items:center;backdrop-filter:blur(2px);
+  }
+  .dz-remove:hover{background:var(--red)}
+  .dz-icon{font-size:20px;opacity:.7}
+
+  .icon-btn{
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    color:#b0b4bd;font-size:15px;transition:all .13s;
+  }
+  .icon-btn:hover{background:#fee2e2;color:var(--red)}
+
+  .btn-add{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 18px;border-radius:11px;font-weight:600;font-size:13.5px;
+    border:1.5px dashed #cfd3da;color:var(--muted);width:100%;justify-content:center;
+    transition:all .15s;background:transparent;
+  }
+  .btn-add:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+  .btn-add .plus{
+    width:20px;height:20px;border-radius:6px;background:var(--accent);color:#17181d;
+    display:grid;place-items:center;font-weight:800;font-size:14px;line-height:1;
+  }
+
+  .empty{
+    text-align:center;padding:48px 20px;color:var(--muted);
+    border:1.5px dashed var(--line);border-radius:var(--radius);margin-bottom:14px;
+    background:rgba(255,255,255,.5);
+  }
+  .empty .big{font-size:30px;margin-bottom:8px}
+  .empty b{color:var(--ink)}
+
+  /* ---------- Monthly occasion cards ---------- */
+  .occ-head{
+    display:flex;align-items:center;gap:14px;padding:15px 18px;
+  }
+  .occ-info{flex:1;min-width:0}
+  .occ-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .chip{
+    font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:3px 8px;border-radius:20px;
+    background:#eef0f3;color:var(--muted);
+  }
+  .chip.hot{background:var(--accent-soft);color:var(--accent-deep)}
+  .occ-desc{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .occ-controls{display:flex;align-items:center;gap:16px;flex:none}
+  .date-input{
+    border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fbfbfc;
+    font-size:13px;outline:none;color:var(--ink);
+  }
+  .date-input:focus{border-color:var(--accent)}
+  .date-input:disabled{opacity:.45}
+
+  .include{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+  .include span{font-size:12.5px;font-weight:600;color:var(--muted)}
+  .switch{position:relative;width:40px;height:23px;flex:none}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .slider{
+    position:absolute;inset:0;border-radius:23px;background:#d7dade;transition:.18s;
+  }
+  .slider:before{
+    content:"";position:absolute;width:17px;height:17px;border-radius:50%;
+    left:3px;top:3px;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .switch input:checked + .slider{background:var(--accent)}
+  .switch input:checked + .slider:before{transform:translateX(17px)}
+
+  .occ-body{border-top:1px solid var(--line);background:#fafafb;padding:16px 18px}
+  .occ-body .promo-item{padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+  .occ-body .btn-add{background:transparent}
+  .occ-body-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9aa0ab;margin-bottom:10px}
+
+  .custom-tag{background:#e0e7ff;color:#4338ca}
+
+  /* Event-level media gallery ("Last year's media") */
+  .media-zone{
+    border:1.5px dashed #d3d6dc;border-radius:12px;background:#fff;
+    padding:12px;margin-bottom:18px;transition:all .15s;
+  }
+  .media-zone.dragover{border-color:var(--accent);background:var(--accent-soft)}
+  .media-grid{display:flex;flex-wrap:wrap;gap:10px}
+  .media-tile{
+    position:relative;width:104px;height:104px;border-radius:10px;overflow:hidden;
+    background:#eef0f3;flex:none;
+  }
+  .media-tile img,.media-tile video{width:100%;height:100%;object-fit:cover;display:block}
+  .media-tile .vid-badge{
+    position:absolute;left:6px;bottom:6px;background:rgba(23,24,29,.75);color:#fff;
+    font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.05em;
+  }
+  .media-add{
+    width:104px;height:104px;border-radius:10px;flex:none;
+    border:1.5px dashed #cfd3da;color:var(--muted);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-size:11.5px;font-weight:600;transition:all .15s;background:transparent;
+  }
+  .media-add:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+  .media-add .plus-big{font-size:20px;line-height:1;color:var(--accent)}
+  .media-hint{font-size:11.5px;color:#9aa0ab;margin-top:10px}
+
+  /* Special hours / closed cards — gray until added */
+  .hours-card.off{
+    background:#f0f1f3;border-style:dashed;box-shadow:none;
+  }
+  .hours-card.off .occ-name,.hours-card.off .occ-desc{color:#9aa0ab}
+  .hours-card.off .chip{background:#e3e5e9;color:#9aa0ab}
+
+  .section-gap{height:26px}
+  .month-note{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--accent-soft);border:1px solid #f3ddb0;border-radius:12px;
+    padding:12px 16px;margin-bottom:20px;font-size:13px;color:#7c5308;
+  }
+
+  /* ---------- Upload spinner ---------- */
+  .spin{
+    width:22px;height:22px;border-radius:50%;flex:none;display:inline-block;
+    border:3px solid rgba(245,166,35,.25);border-top-color:var(--accent);
+    animation:spin .8s linear infinite;
+  }
+  .spin-dark{border-color:#e6e8ec;border-top-color:var(--accent)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tile-uploading{
+    width:100%;height:100%;display:grid;place-items:center;background:#f4f5f7;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translate(-50%,80px);
+    background:var(--rail);color:#fff;padding:12px 22px;border-radius:12px;
+    font-weight:600;font-size:13.5px;box-shadow:0 12px 32px rgba(0,0,0,.28);
+    transition:transform .3s cubic-bezier(.2,.9,.3,1.2);z-index:100;
+    display:flex;align-items:center;gap:10px;
+  }
+  .toast.show{transform:translate(-50%,0)}
+  .toast .tick{color:var(--accent)}
+
+  @media (max-width:860px){
+    .rail{width:190px}
+    .panel{padding:22px 20px 80px}
+    .promo-item{flex-wrap:wrap}
+    .brand-sub{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div>
+      <div class="brand-name">Bar<em>Leads</em></div>
+      <div class="brand-sub">Client Portal · Email Campaigns</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab" data-tab="weekly">Weekly Promos</button>
+    <button class="tab" data-tab="monthly">Monthly Promos</button>
+  </nav>
+  <div class="topbar-right">
+    <div class="save-state" id="saveState"><span class="save-dot"></span><span id="saveText">All changes saved</span></div>
+    <button class="btn-submit" id="submitBtn">Submit to BarLeads</button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail" id="rail"></aside>
+  <main class="panel" id="panel"></main>
+</div>
+
+<div class="toast" id="toast"><span class="tick">✓</span><span id="toastMsg"></span></div>
+
+<script>
+/* =========================================================
+   BarLeads Client Portal
+   ========================================================= */
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ---------- date helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y,m,dd] = s.split('-').map(Number); return new Date(y,m-1,dd); };
+const fmt = d => d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+function nthWeekday(year, month, weekday, n){          // weekday: 0=Sun
+  const first = new Date(year, month, 1);
+  const offset = (weekday - first.getDay() + 7) % 7;
+  return new Date(year, month, 1 + offset + (n-1)*7);
+}
+function lastWeekday(year, month, weekday){
+  const last = new Date(year, month+1, 0);
+  const offset = (last.getDay() - weekday + 7) % 7;
+  return new Date(year, month+1, -offset);
+}
+function easter(year){                                  // Gregorian computus
+  const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4,
+        f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+        i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        month=Math.floor((h+l-7*m+114)/31)-1,day=((h+l-7*m+114)%31)+1;
+  return new Date(year,month,day);
+}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function thanksgiving(y){ return nthWeekday(y,10,4,4); } // 4th Thursday Nov
+
+/* ---------- suggested occasions ---------- */
+/* breakdown:true → expands into Actual / Friday / Saturday variants,
+   hiding whichever weekend variant the actual date already lands on. */
+const OCCASIONS = [
+  // January
+  {id:'newyearsday', month:0, name:"New Year's Day Recovery", desc:'Hair-of-the-dog brunch, bloody mary bar', resolve:y=>new Date(y,0,1)},
+  {id:'cfpchamp',    month:0, name:'College Football Championship', desc:'Watch party — food & pitcher specials', resolve:y=>nthWeekday(y,0,1,2)},
+  {id:'dryjan',      month:0, name:'Dry January Feature', desc:'Mocktail menu launch — capture the sober crowd', resolve:y=>nthWeekday(y,0,5,2)},
+  // February
+  {id:'superbowl',   month:1, name:'Super Bowl Sunday', desc:'Biggest bar day of Q1 — reservations & food deals', resolve:y=>nthWeekday(y,1,0,2), hot:true},
+  {id:'galentines',  month:1, name:"Galentine's Day", desc:'Ladies night, Feb 13', resolve:y=>new Date(y,1,13)},
+  {id:'valentines',  month:1, name:"Valentine's Day", desc:'Date-night packages + Anti-Valentine singles night', resolve:y=>new Date(y,1,14)},
+  {id:'mardigras',   month:1, name:'Mardi Gras', desc:'Beads, hurricanes & king cake shots', resolve:y=>addDays(easter(y),-47), dynamicMonth:true},
+  // March
+  {id:'stpaddys',    month:2, name:"St. Patrick's Day", desc:'Green beer, Irish car bombs, the works', resolve:y=>new Date(y,2,17), breakdown:true, hot:true},
+  {id:'marchmadness',month:2, name:'March Madness Opening Weekend', desc:'All games, all screens, bracket contest', resolve:y=>nthWeekday(y,2,4,3)},
+  {id:'springday',   month:2, name:'First Day of Spring / Patio Opening', desc:'Patio season kickoff', resolve:y=>new Date(y,2,20)},
+  {id:'openingday',  month:2, name:'MLB Opening Day', desc:'Adjust to your local team’s opener', resolve:y=>lastWeekday(y,2,4)},
+  // April
+  {id:'easterbrunch',month:3, name:'Easter Weekend Brunch', desc:'Brunch cocktails, family-friendly daytime', resolve:y=>easter(y), dynamicMonth:true},
+  {id:'fourtwenty',  month:3, name:'4/20', desc:'Munchie menu — if it fits your vibe', resolve:y=>new Date(y,3,20)},
+  // May
+  {id:'cinco',       month:4, name:'Cinco de Mayo', desc:'Margs, tacos, tequila flights', resolve:y=>new Date(y,4,5), breakdown:true, hot:true},
+  {id:'derby',       month:4, name:'Kentucky Derby', desc:'Mint juleps & fancy hats', resolve:y=>nthWeekday(y,4,6,1)},
+  {id:'memorial',    month:4, name:'Memorial Day Weekend', desc:'Long-weekend party, Saturday anchor', resolve:y=>addDays(lastWeekday(y,4,1),-2)},
+  // June
+  {id:'pride',       month:5, name:'Pride Celebration', desc:'Pride month party', resolve:y=>lastWeekday(y,5,6)},
+  {id:'fathersday',  month:5, name:"Father's Day", desc:'Beer & BBQ specials', resolve:y=>nthWeekday(y,5,0,3)},
+  {id:'summerkick',  month:5, name:'Summer Kickoff', desc:'First day of summer / finals watch parties', resolve:y=>new Date(y,5,20)},
+  // July
+  {id:'july4',       month:6, name:'Fourth of July', desc:'All-American cookout & drink specials', resolve:y=>new Date(y,6,4), hot:true},
+  {id:'tequiladay',  month:6, name:'National Tequila Day', desc:'July 24 — flights & marg specials', resolve:y=>new Date(y,6,24)},
+  {id:'xmasjuly',    month:6, name:'Christmas in July', desc:'Mid-summer holiday gimmick that works', resolve:y=>new Date(y,6,25)},
+  // August
+  {id:'ipaday',      month:7, name:'National IPA Day', desc:'First Thursday — craft beer feature', resolve:y=>nthWeekday(y,7,4,1)},
+  {id:'rumday',      month:7, name:'National Rum Day', desc:'Aug 16 — tiki night', resolve:y=>new Date(y,7,16)},
+  {id:'endsummer',   month:7, name:'End-of-Summer Bash', desc:'Last blowout before fall', resolve:y=>lastWeekday(y,7,6)},
+  // September
+  {id:'laborday',    month:8, name:'Labor Day Weekend', desc:'Long-weekend party, Saturday anchor', resolve:y=>addDays(nthWeekday(y,8,1,1),-2)},
+  {id:'nflkickoff',  month:8, name:'NFL Kickoff', desc:'Season opener Thursday night', resolve:y=>addDays(nthWeekday(y,8,1,1),3), hot:true},
+  {id:'oktoberfest', month:8, name:'Oktoberfest Kickoff', desc:'Steins, brats & German beer (yes, it starts in Sept)', resolve:y=>nthWeekday(y,8,6,3)},
+  // October
+  {id:'oktoberfin',  month:9, name:'Oktoberfest Finale', desc:'Last weekend of Oktoberfest', resolve:y=>nthWeekday(y,9,6,1)},
+  {id:'worldseries', month:9, name:'World Series Watch Party', desc:'Adjust to the series schedule', resolve:y=>nthWeekday(y,9,5,3)},
+  {id:'halloween',   month:9, name:'Halloween', desc:'Costume contest, themed cocktails', resolve:y=>new Date(y,9,31), breakdown:true, hot:true},
+  // November
+  {id:'veterans',    month:10, name:'Veterans Day', desc:'Military specials & appreciation night', resolve:y=>new Date(y,10,11)},
+  {id:'friendsgiving',month:10,name:'Friendsgiving', desc:'Group parties the weekend before Thanksgiving', resolve:y=>addDays(thanksgiving(y),-5)},
+  {id:'blackoutwed', month:10, name:'Thanksgiving Eve ("Blackout Wednesday")', desc:'Biggest bar night of the year — no exaggeration', resolve:y=>addDays(thanksgiving(y),-1), hot:true},
+  // December
+  {id:'uglysweater', month:11, name:'Ugly Sweater Party', desc:'Holiday party season anchor', resolve:y=>nthWeekday(y,11,6,2)},
+  {id:'xmaseveeve',  month:11, name:'Christmas Eve Eve', desc:'Dec 23 — hometown reunion night', resolve:y=>new Date(y,11,23)},
+  {id:'nye',         month:11, name:"New Year's Eve", desc:'Ticketed party, champagne toast at midnight', resolve:y=>new Date(y,11,31), hot:true},
+];
+
+/* ---------- special hours / closed presets ----------
+   Days it's normal for a bar to be closed or on unusual hours.
+   Grayed out by default → email says nothing. Toggle "Add?" and the
+   email will tell customers whether the venue is open/closed that day. */
+const HOURS_PRESETS = [
+  {id:'hrs-newyearsday', month:0,  name:"New Year's Day",  resolve:y=>new Date(y,0,1),   defStatus:'special', hint:'Late open or limited hours are common'},
+  {id:'hrs-easter',      month:3,  name:'Easter Sunday',   resolve:y=>easter(y),          defStatus:'special', hint:'Some bars close or run brunch-only hours', dynamicMonth:true},
+  {id:'hrs-thanksgiving',month:10, name:'Thanksgiving Day',resolve:y=>thanksgiving(y),    defStatus:'closed',  hint:'Most bars close (the party was the night before)'},
+  {id:'hrs-xmaseve',     month:11, name:'Christmas Eve',   resolve:y=>new Date(y,11,24),  defStatus:'special', hint:'Early close is common'},
+  {id:'hrs-xmasday',     month:11, name:'Christmas Day',   resolve:y=>new Date(y,11,25),  defStatus:'closed',  hint:'Most bars are closed'},
+];
+const STATUS_LABELS = {closed:'Closed', special:'Open — special hours', open:'Open — normal hours'};
+
+function hoursPresetsForMonth(month, year){
+  return HOURS_PRESETS
+    .filter(p => (p.dynamicMonth ? p.resolve(year).getMonth() : p.month) === month)
+    .map(p => ({...p, date:p.resolve(year)}));
+}
+
+/* Expand a breakdown occasion into Actual / Friday / Saturday variants.
+   If the actual date lands on Fri or Sat, that duplicate variant is omitted. */
+function expandOccasion(occ, year){
+  const d = occ.resolve(year);
+  if(!occ.breakdown){
+    return [{vid:occ.id, name:occ.name, desc:occ.desc, date:d, hot:occ.hot}];
+  }
+  const dow = d.getDay(); // 0 Sun … 5 Fri, 6 Sat
+  const out = [{vid:occ.id+'-actual', name:'Actual '+occ.name, desc:occ.desc + ' — the day itself', date:d, hot:occ.hot}];
+  if(dow !== 5){
+    const fri = addDays(d, -(((dow - 5) + 7) % 7));
+    out.push({vid:occ.id+'-fri', name:occ.name+' Friday', desc:'Weekend party night', date:fri, hot:occ.hot});
+  }
+  if(dow !== 6){
+    const sat = (dow === 5) ? addDays(d,1) : addDays(d, -(((dow - 6) + 7) % 7));
+    out.push({vid:occ.id+'-sat', name:occ.name+' Saturday', desc:'Weekend party night', date:sat, hot:occ.hot});
+  }
+  out.sort((a,b)=>a.date-b.date);
+  return out;
+}
+
+function occasionsForMonth(month, year){
+  const list = [];
+  for(const occ of OCCASIONS){
+    const groupMonth = occ.dynamicMonth ? occ.resolve(year).getMonth() : occ.month;
+    if(groupMonth !== month) continue;
+    list.push(...expandOccasion(occ, year).map(v => ({...v})));
+  }
+  list.sort((a,b)=>a.date-b.date);
+  return list;
+}
+
+/* ---------- state ---------- */
+let state = {
+  tab:'weekly',
+  day:0,
+  month:new Date().getMonth(),
+  year:new Date().getFullYear(),
+  weekly:{},                    // dayIndex -> [items]
+  monthly:{},                   // `${year}:${vid}` -> {inc, date, items, media}
+  customs:{},                   // `${year}:${month}` -> [{id,name,date,items,media}]
+  hoursNotices:{},              // `${year}:${hid}` -> {add, status, text}
+  hoursCustom:{},               // `${year}:${month}` -> [{id,name,date,status,text}]
+};
+let stateLoaded = false;        // no saves until the server copy is merged in
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* Persistence: debounced PUT to /api/state, retry with backoff on failure. */
+let saveTimer=null, retryDelay=0;
+function setSaveUI(saving, text){
+  const el = document.getElementById('saveState');
+  el.classList.toggle('saving', saving);
+  document.getElementById('saveText').textContent = text;
+}
+function save(){
+  if(!stateLoaded) return;
+  setSaveUI(true, 'Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushState, 1000);
+}
+async function pushState(){
+  clearTimeout(saveTimer);
+  try{
+    const res = await fetch('/api/state', {
+      method:'PUT',
+      headers:{'content-type':'application/json'},
+      body: JSON.stringify(state),
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    retryDelay = 0;
+    setSaveUI(false, 'All changes saved');
+  }catch(err){
+    retryDelay = Math.min(retryDelay ? retryDelay*2 : 2000, 30000);
+    setSaveUI(true, 'Couldn’t save — retrying…');
+    saveTimer = setTimeout(pushState, retryDelay);
+  }
+}
+
+/* Media uploads go to R2 via /api/media; state stores only the returned URL. */
+async function uploadFile(f){
+  const res = await fetch('/api/media', {
+    method:'POST',
+    body: f,
+    headers:{'Content-Type': f.type || 'application/octet-stream', 'X-Filename': f.name || 'upload'},
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return (await res.json()).url;
+}
+function deleteMedia(url){
+  if(url && typeof url === 'string' && url.startsWith('/api/media/')){
+    fetch(url, {method:'DELETE'}).catch(()=>{});
+  }
+}
+
+function monthlyEntry(vid, defaults){
+  const key = `${state.year}:${vid}`;
+  if(!state.monthly[key]) state.monthly[key] = {inc:false, date:defaults.date, items:[], media:[]};
+  if(!state.monthly[key].media) state.monthly[key].media = [];
+  return state.monthly[key];
+}
+function customList(month){
+  const key = `${state.year}:${month}`;
+  if(!state.customs[key]) state.customs[key] = [];
+  return state.customs[key];
+}
+function hoursEntry(hid, defStatus){
+  const key = `${state.year}:${hid}`;
+  if(!state.hoursNotices[key]) state.hoursNotices[key] = {add:false, status:defStatus, text:''};
+  return state.hoursNotices[key];
+}
+function hoursCustomList(month){
+  const key = `${state.year}:${month}`;
+  if(!state.hoursCustom[key]) state.hoursCustom[key] = [];
+  return state.hoursCustom[key];
+}
+
+/* ---------- badge counts ---------- */
+function weeklyCount(day){ return (state.weekly[day]||[]).length; }
+function monthlyCount(month){
+  let n = 0;
+  for(const v of occasionsForMonth(month, state.year)){
+    const e = state.monthly[`${state.year}:${v.vid}`];
+    if(e && e.inc) n++;
+  }
+  n += (state.customs[`${state.year}:${month}`]||[]).length;
+  for(const p of hoursPresetsForMonth(month, state.year)){
+    const e = state.hoursNotices[`${state.year}:${p.id}`];
+    if(e && e.add) n++;
+  }
+  n += (state.hoursCustom[`${state.year}:${month}`]||[]).length;
+  return n;
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  renderTabs();
+  renderRail();
+  renderPanel();
+}
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===state.tab));
+}
+function renderRail(){
+  const rail = document.getElementById('rail');
+  if(state.tab==='weekly'){
+    rail.innerHTML = `<div class="rail-label">Days of the Week</div>` +
+      DAYS.map((d,i)=>{
+        const n = weeklyCount(i);
+        return `<button class="rail-item ${state.day===i?'active':''}" data-nav-day="${i}">
+          <span>${d}</span><span class="rail-badge ${n?'has':''}">${n}</span></button>`;
+      }).join('');
+  } else {
+    // Portal launched in 2026 — allow looking one year back, but never before 2026.
+    const BUILD_YEAR = 2026;
+    const minYear = Math.max(BUILD_YEAR, new Date().getFullYear() - 1);
+    const years = []; for(let y = minYear; y <= new Date().getFullYear() + 2; y++) years.push(y);
+    if(state.year < minYear) state.year = minYear;
+    rail.innerHTML = `<div class="rail-label">Promo Year</div>
+      <div class="year-row"><select class="year-select" id="yearSelect">
+        ${years.map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${y}</option>`).join('')}
+      </select></div>
+      <div class="rail-label">Months</div>` +
+      MONTHS.map((m,i)=>{
+        const n = monthlyCount(i);
+        return `<button class="rail-item ${state.month===i?'active':''}" data-nav-month="${i}">
+          <span>${m}</span><span class="rail-badge ${n?'has':''}">${n}</span></button>`;
+      }).join('');
+  }
+}
+
+function mediaGalleryHtml(mediaList, scope, extra){
+  const attrs = `data-scope="${scope}" ${extra}`;
+  return `
+  <div class="occ-body-label">Last year's media — whole event</div>
+  <div class="media-zone" data-media-zone ${attrs}>
+    <div class="media-grid">
+      ${mediaList.map(m=>`
+        <div class="media-tile">
+          ${m.uploading
+            ? `<div class="tile-uploading"><span class="spin"></span></div>`
+            : m.type==='video' ? `<video src="${esc(m.src)}" muted></video><span class="vid-badge">VIDEO</span>` : `<img src="${esc(m.src)}" alt="">`}
+          ${m.uploading ? '' : `<button class="dz-remove" data-media-del data-media-id="${m.id}" ${attrs} title="Remove">✕</button>`}
+        </div>`).join('')}
+      <button class="media-add" data-media-add ${attrs}><span class="plus-big">+</span>Add media</button>
+    </div>
+    <div class="media-hint">Drop photos or video from last year's event here. This is general event media — attach imagery to a specific special below only when it belongs to that special.</div>
+    <input type="file" accept="image/*,video/*" multiple hidden data-media-input ${attrs}>
+  </div>`;
+}
+
+function promoItemHtml(item, scope, extra){
+  const attrs = `data-scope="${scope}" ${extra} data-item-id="${item.id}"`;
+  return `
+  <div class="promo-item">
+    <div class="dropzone ${item.img?'filled':''}" data-dropzone ${attrs}>
+      ${item.uploading
+        ? `<span class="spin"></span><span>Uploading…</span>`
+        : item.img
+        ? `<img src="${esc(item.img)}" alt=""><button class="dz-remove" data-img-del ${attrs} title="Remove image">✕</button>`
+        : `<span class="dz-icon">🖼️</span><span>Drop image here<br>or click to upload</span>`}
+      <input type="file" accept="image/*" hidden data-img-input ${attrs}>
+    </div>
+    <div class="promo-fields">
+      <input class="f-input f-title" placeholder="Promo headline — e.g. $5 All-You-Can-Eat Tacos" value="${esc(item.title)}" data-field="title" ${attrs}>
+      <textarea class="f-input f-details" placeholder="Details / fine print (optional) — times, restrictions, hashtags…" data-field="details" ${attrs}>${esc(item.details)}</textarea>
+    </div>
+    <div class="promo-side">
+      <button class="icon-btn" data-del-item ${attrs} title="Delete promo">🗑</button>
+    </div>
+  </div>`;
+}
+
+function renderPanel(){
+  const panel = document.getElementById('panel');
+  if(state.tab==='weekly'){
+    const day = state.day;
+    const items = state.weekly[day] || [];
+    panel.innerHTML = `
+      <div class="panel-head">
+        <div class="panel-title">${DAYS[day]} Promos</div>
+        <div class="panel-sub">These run every ${DAYS[day]} and feed your automated weekly emails. Add as many line items as you run.</div>
+      </div>
+      ${items.length ? items.map(it=>`<div class="card">${promoItemHtml(it,'weekly',`data-day="${day}"`)}</div>`).join('')
+        : `<div class="empty"><div class="big">🍻</div>No promos yet for <b>${DAYS[day]}</b>.<br>Add your first one below — e.g. "$4 Shots of Patrón".</div>`}
+      <button class="btn-add" data-add-weekly="${day}"><span class="plus">+</span> Add a ${DAYS[day]} promo</button>`;
+  } else {
+    const month = state.month, year = state.year;
+    const variants = occasionsForMonth(month, year);
+    const customs = customList(month);
+    const hasBreakdown = variants.some(v=>/-(actual|fri|sat)$/.test(v.vid));
+    panel.innerHTML = `
+      <div class="panel-head">
+        <div class="panel-title">${MONTHS[month]} ${year}</div>
+        <div class="panel-sub">Toggle <b>Include?</b> on the events you're running, adjust the date if your party lands on a different night, then add your promos.</div>
+      </div>
+      ${hasBreakdown ? `<div class="month-note">🎉&nbsp; Big party holidays are pre-split into the actual day plus its party weekend. If the holiday already lands on a Friday or Saturday, the duplicate night is automatically removed for ${year}.</div>` : ''}
+      ${variants.map(v=>{
+        const entry = monthlyEntry(v.vid, {date: iso(v.date)});
+        const attrs = `data-vid="${v.vid}"`;
+        return `<div class="card">
+          <div class="occ-head">
+            <div class="occ-info">
+              <div class="occ-name">${esc(v.name)}
+                ${v.hot?`<span class="chip hot">HIGH TRAFFIC</span>`:''}
+                <span class="chip">suggested: ${fmt(v.date)}</span>
+              </div>
+              <div class="occ-desc">${esc(v.desc)}</div>
+            </div>
+            <div class="occ-controls">
+              <input type="date" class="date-input" value="${entry.date}" ${entry.inc?'':'disabled'} data-field="date" data-scope="monthly" ${attrs}>
+              <label class="include"><span>Include?</span>
+                <span class="switch"><input type="checkbox" ${entry.inc?'checked':''} data-toggle-inc ${attrs}><span class="slider"></span></span>
+              </label>
+            </div>
+          </div>
+          ${entry.inc ? `<div class="occ-body">
+            ${mediaGalleryHtml(entry.media, 'monthly', attrs)}
+            <div class="occ-body-label">Promos for this event</div>
+            ${entry.items.map(it=>promoItemHtml(it,'monthly',attrs)).join('')}
+            <button class="btn-add" data-add-item data-scope="monthly" ${attrs}><span class="plus">+</span> Add promo</button>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+      <div class="section-gap"></div>
+      ${customs.map(c=>{
+        const attrs = `data-custom-id="${c.id}" data-month="${month}"`;
+        return `<div class="card">
+          <div class="occ-head">
+            <div class="occ-info">
+              <div class="occ-name"><input class="f-input f-title" style="max-width:340px" placeholder="Event name — e.g. Live Band Night" value="${esc(c.name)}" data-field="name" data-scope="custom" ${attrs}>
+                <span class="chip custom-tag">CUSTOM</span></div>
+            </div>
+            <div class="occ-controls">
+              <input type="date" class="date-input" value="${c.date}" data-field="date" data-scope="custom" ${attrs}>
+              <button class="icon-btn" data-del-custom ${attrs} title="Delete event">🗑</button>
+            </div>
+          </div>
+          <div class="occ-body">
+            ${mediaGalleryHtml(c.media||[], 'custom', attrs)}
+            <div class="occ-body-label">Promos for this event</div>
+            ${c.items.map(it=>promoItemHtml(it,'custom',attrs)).join('')}
+            <button class="btn-add" data-add-item data-scope="custom" ${attrs}><span class="plus">+</span> Add promo</button>
+          </div>
+        </div>`;
+      }).join('')}
+      <button class="btn-add" data-add-custom="${month}"><span class="plus">+</span> Add a custom ${MONTHS[month]} event</button>
+      ${hoursSectionHtml(month, year)}`;
+  }
+}
+
+/* ---------- special hours / closed section ---------- */
+function hoursSectionHtml(month, year){
+  const presets = hoursPresetsForMonth(month, year);
+  const customs = hoursCustomList(month);
+  const statusSelect = (val, attrs) => `
+    <select class="date-input" data-field="status" ${attrs}>
+      ${Object.entries(STATUS_LABELS).map(([k,l])=>`<option value="${k}" ${k===val?'selected':''}>${l}</option>`).join('')}
+    </select>`;
+  return `
+    <div class="section-gap"></div>
+    <div class="panel-head" style="margin-bottom:14px">
+      <div class="panel-title" style="font-size:18px">Special Hours / Closed Notifications</div>
+      <div class="panel-sub">By default your emails say <b>nothing</b> about these days. Toggle <b>Add?</b> and the email that week will tell customers whether you're open, closed, or on special hours.</div>
+    </div>
+    ${presets.map(p=>{
+      const entry = hoursEntry(p.id, p.defStatus);
+      const attrs = `data-scope="hours" data-hid="${p.id}"`;
+      return `<div class="card hours-card ${entry.add?'':'off'}">
+        <div class="occ-head">
+          <div class="occ-info">
+            <div class="occ-name">${esc(p.name)} <span class="chip">${fmt(p.date)}</span>${entry.add?`<span class="chip hot">IN EMAIL</span>`:''}</div>
+            <div class="occ-desc">${esc(p.hint)}</div>
+          </div>
+          <div class="occ-controls">
+            ${entry.add ? statusSelect(entry.status, attrs) : ''}
+            <label class="include"><span>Add?</span>
+              <span class="switch"><input type="checkbox" ${entry.add?'checked':''} data-toggle-hours ${attrs}><span class="slider"></span></span>
+            </label>
+          </div>
+        </div>
+        ${entry.add ? `<div class="occ-body">
+          <input class="f-input" placeholder="Message shown in the email — e.g. “Closed Christmas Day, back at noon on the 26th”" value="${esc(entry.text)}" data-field="text" ${attrs}>
+        </div>`:''}
+      </div>`;
+    }).join('')}
+    ${customs.map(c=>{
+      const attrs = `data-scope="hourscustom" data-custom-id="${c.id}" data-month="${month}"`;
+      return `<div class="card hours-card">
+        <div class="occ-head">
+          <div class="occ-info">
+            <div class="occ-name"><input class="f-input f-title" style="max-width:300px" placeholder="Reason — e.g. Private event, Renovation" value="${esc(c.name)}" data-field="name" ${attrs}>
+              <span class="chip custom-tag">CUSTOM</span><span class="chip hot">IN EMAIL</span></div>
+          </div>
+          <div class="occ-controls">
+            <input type="date" class="date-input" value="${c.date}" data-field="date" ${attrs}>
+            ${statusSelect(c.status, attrs)}
+            <button class="icon-btn" data-del-hours-custom ${attrs} title="Delete">🗑</button>
+          </div>
+        </div>
+        <div class="occ-body">
+          <input class="f-input" placeholder="Message shown in the email" value="${esc(c.text)}" data-field="text" ${attrs}>
+        </div>
+      </div>`;
+    }).join('')}
+    <button class="btn-add" data-add-hours-custom="${month}"><span class="plus">+</span> Add a custom closure / special hours day</button>`;
+}
+
+/* ---------- item lookup ---------- */
+function getItems(el){
+  const scope = el.dataset.scope;
+  if(scope==='weekly'){
+    const day = Number(el.dataset.day);
+    if(!state.weekly[day]) state.weekly[day] = [];
+    return state.weekly[day];
+  }
+  if(scope==='monthly'){
+    return state.monthly[`${state.year}:${el.dataset.vid}`].items;
+  }
+  if(scope==='custom'){
+    const c = customList(Number(el.dataset.month)).find(c=>c.id===el.dataset.customId);
+    return c ? c.items : [];
+  }
+  return [];
+}
+function getItem(el){
+  return getItems(el).find(i=>i.id===el.dataset.itemId);
+}
+function getMediaList(el){
+  const scope = el.dataset.scope;
+  if(scope==='monthly'){
+    const entry = state.monthly[`${state.year}:${el.dataset.vid}`];
+    if(entry && !entry.media) entry.media = [];
+    return entry ? entry.media : [];
+  }
+  if(scope==='custom'){
+    const c = customList(Number(el.dataset.month)).find(c=>c.id===el.dataset.customId);
+    if(c && !c.media) c.media = [];
+    return c ? c.media : [];
+  }
+  return [];
+}
+function addMediaFiles(el, files){
+  const list = getMediaList(el);
+  const accepted = Array.from(files).filter(f=>f.type.startsWith('image/')||f.type.startsWith('video/'));
+  if(!accepted.length) return;
+  accepted.forEach(f=>{
+    const id = uid();
+    list.push({id, src:null, uploading:true, type:f.type.startsWith('video/')?'video':'image', name:f.name});
+    uploadFile(f).then(url=>{
+      const m = list.find(m=>m.id===id);
+      if(m){ m.src = url; delete m.uploading; save(); render(); }
+    }).catch(()=>{
+      const idx = list.findIndex(m=>m.id===id);
+      if(idx>-1) list.splice(idx,1);
+      render();
+      toast('Upload failed — please try again.');
+    });
+  });
+  render();
+}
+
+/* Single promo-image upload (dropzone + file input share this). */
+function setItemImage(el, file){
+  if(!file || !file.type.startsWith('image/')) return;
+  const item = getItem(el);
+  if(!item) return;
+  const old = item.img;
+  item.uploading = true;
+  render();
+  uploadFile(file).then(url=>{
+    deleteMedia(old);
+    item.img = url;
+    delete item.uploading;
+    save(); render();
+  }).catch(()=>{
+    delete item.uploading;
+    render();
+    toast('Upload failed — please try again.');
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e=>{
+  const t = e.target;
+
+  const tab = t.closest('[data-tab]');
+  if(tab){ state.tab = tab.dataset.tab; save(); render(); return; }
+
+  const navDay = t.closest('[data-nav-day]');
+  if(navDay){ state.day = Number(navDay.dataset.navDay); save(); render(); return; }
+
+  const navMonth = t.closest('[data-nav-month]');
+  if(navMonth){ state.month = Number(navMonth.dataset.navMonth); save(); render(); return; }
+
+  const addWeekly = t.closest('[data-add-weekly]');
+  if(addWeekly){
+    const day = Number(addWeekly.dataset.addWeekly);
+    if(!state.weekly[day]) state.weekly[day] = [];
+    state.weekly[day].push({id:uid(), title:'', details:'', img:null});
+    save(); render();
+    const first = document.querySelector('.card:last-of-type .f-title');
+    const inputs = document.querySelectorAll('.f-title'); inputs[inputs.length-1]?.focus();
+    return;
+  }
+
+  const addItem = t.closest('[data-add-item]');
+  if(addItem){
+    getItems(addItem).push({id:uid(), title:'', details:'', img:null});
+    save(); render(); return;
+  }
+
+  const delItem = t.closest('[data-del-item]');
+  if(delItem){
+    const arr = getItems(delItem);
+    const idx = arr.findIndex(i=>i.id===delItem.dataset.itemId);
+    if(idx>-1){ deleteMedia(arr[idx].img); arr.splice(idx,1); }
+    save(); render(); return;
+  }
+
+  const addCustom = t.closest('[data-add-custom]');
+  if(addCustom){
+    const month = Number(addCustom.dataset.addCustom);
+    customList(month).push({id:uid(), name:'', date:iso(new Date(state.year, month, 15)), items:[]});
+    save(); render(); return;
+  }
+
+  const delCustom = t.closest('[data-del-custom]');
+  if(delCustom){
+    const arr = customList(Number(delCustom.dataset.month));
+    const idx = arr.findIndex(c=>c.id===delCustom.dataset.customId);
+    if(idx>-1){
+      (arr[idx].media||[]).forEach(m=>deleteMedia(m.src));
+      (arr[idx].items||[]).forEach(i=>deleteMedia(i.img));
+      arr.splice(idx,1);
+    }
+    save(); render(); return;
+  }
+
+  const addHoursCustom = t.closest('[data-add-hours-custom]');
+  if(addHoursCustom){
+    const month = Number(addHoursCustom.dataset.addHoursCustom);
+    hoursCustomList(month).push({id:uid(), name:'', date:iso(new Date(state.year, month, 15)), status:'closed', text:''});
+    save(); render(); return;
+  }
+
+  const delHoursCustom = t.closest('[data-del-hours-custom]');
+  if(delHoursCustom){
+    const arr = hoursCustomList(Number(delHoursCustom.dataset.month));
+    const idx = arr.findIndex(c=>c.id===delHoursCustom.dataset.customId);
+    if(idx>-1) arr.splice(idx,1);
+    save(); render(); return;
+  }
+
+  const mediaAdd = t.closest('[data-media-add]');
+  if(mediaAdd){
+    mediaAdd.closest('[data-media-zone]')?.querySelector('[data-media-input]')?.click();
+    return;
+  }
+
+  const mediaDel = t.closest('[data-media-del]');
+  if(mediaDel){
+    const list = getMediaList(mediaDel);
+    const idx = list.findIndex(m=>m.id===mediaDel.dataset.mediaId);
+    if(idx>-1){ deleteMedia(list[idx].src); list.splice(idx,1); }
+    save(); render(); return;
+  }
+
+  const imgDel = t.closest('[data-img-del]');
+  if(imgDel){
+    const item = getItem(imgDel);
+    if(item){ deleteMedia(item.img); item.img = null; save(); render(); }
+    return;
+  }
+
+  const dz = t.closest('[data-dropzone]');
+  if(dz && !t.closest('[data-img-del]')){
+    dz.querySelector('[data-img-input]')?.click();
+    return;
+  }
+
+  if(t.closest('#submitBtn')){
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    pushState()
+      .then(()=>fetch('/api/submit', {method:'POST'}))
+      .then(res=>{
+        if(res && !res.ok) throw new Error('HTTP '+res.status);
+        toast('Promo schedule submitted to BarLeads — we’ll take it from here.');
+      })
+      .catch(()=>toast('Couldn’t submit — check your connection and try again.'))
+      .finally(()=>{ btn.disabled = false; });
+    return;
+  }
+});
+
+document.addEventListener('change', e=>{
+  const t = e.target;
+
+  if(t.matches('#yearSelect')){
+    state.year = Number(t.value); save(); render(); return;
+  }
+
+  if(t.matches('[data-toggle-inc]')){
+    const vid = t.dataset.vid;
+    const entry = state.monthly[`${state.year}:${vid}`];
+    entry.inc = t.checked;
+    save(); render(); return;
+  }
+
+  if(t.matches('[data-toggle-hours]')){
+    const entry = state.hoursNotices[`${state.year}:${t.dataset.hid}`];
+    entry.add = t.checked;
+    save(); render(); return;
+  }
+
+  // selects fire 'change' — route status edits through the shared field handler
+  if(t.matches('select[data-field="status"]')){ onFieldEdit(t); return; }
+
+  if(t.matches('[data-media-input]')){
+    if(t.files && t.files.length) addMediaFiles(t, t.files);
+    return;
+  }
+
+  if(t.matches('[data-img-input]')){
+    const file = t.files && t.files[0];
+    if(file) setItemImage(t, file);
+    return;
+  }
+});
+
+function onFieldEdit(t){
+  const field = t.dataset.field;
+  if(!field) return;
+  const scope = t.dataset.scope;
+
+  if(scope==='hours'){
+    const entry = state.hoursNotices[`${state.year}:${t.dataset.hid}`];
+    if(entry) entry[field] = t.value;
+    save(); return;
+  }
+  if(scope==='hourscustom'){
+    const c = hoursCustomList(Number(t.dataset.month)).find(c=>c.id===t.dataset.customId);
+    if(c) c[field] = t.value;
+    save(); return;
+  }
+  if(field==='date'){
+    if(scope==='monthly'){
+      state.monthly[`${state.year}:${t.dataset.vid}`].date = t.value;
+    } else if(scope==='custom'){
+      const c = customList(Number(t.dataset.month)).find(c=>c.id===t.dataset.customId);
+      if(c) c.date = t.value;
+    }
+    save(); return;
+  }
+  if(field==='name' && scope==='custom'){
+    const c = customList(Number(t.dataset.month)).find(c=>c.id===t.dataset.customId);
+    if(c) c.name = t.value;
+    save(); return;
+  }
+  const item = getItem(t);
+  if(item){ item[field] = t.value; save(); }
+}
+document.addEventListener('input', e=>onFieldEdit(e.target));
+
+/* drag & drop images + event media */
+document.addEventListener('dragover', e=>{
+  const dz = e.target.closest('[data-dropzone],[data-media-zone]');
+  if(dz){ e.preventDefault(); dz.classList.add('dragover'); }
+});
+document.addEventListener('dragleave', e=>{
+  const dz = e.target.closest('[data-dropzone],[data-media-zone]');
+  if(dz) dz.classList.remove('dragover');
+});
+document.addEventListener('drop', e=>{
+  const mz = e.target.closest('[data-media-zone]');
+  if(mz){
+    e.preventDefault();
+    mz.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files.length) addMediaFiles(mz, e.dataTransfer.files);
+    return;
+  }
+  const dz = e.target.closest('[data-dropzone]');
+  if(!dz) return;
+  e.preventDefault();
+  dz.classList.remove('dragover');
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file || !file.type.startsWith('image/')) return;
+  setItemImage(dz, file);
+});
+
+/* toast */
+let toastTimer=null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+/* ---------- boot: load state from the server, then render ---------- */
+(async function boot(){
+  document.getElementById('panel').innerHTML =
+    '<div class="empty"><div class="big"><span class="spin spin-dark"></span></div>Loading your portal…</div>';
+  try{
+    const res = await fetch('/api/state');
+    if(res.status === 401){
+      document.getElementById('panel').innerHTML =
+        '<div class="empty"><div class="big">🔒</div><b>Your session has expired.</b><br>Refresh the page to log back in.</div>';
+      return;
+    }
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data) state = Object.assign(state, data);
+  }catch(err){
+    document.getElementById('panel').innerHTML =
+      '<div class="empty"><div class="big">⚠️</div><b>Couldn’t load your saved promos.</b><br>Check your connection and refresh the page.</div>';
+    return;
+  }
+  stateLoaded = true;
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+name = "barleads-portal"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "./public"
+
+# After creating the D1 database, paste its ID below:
+#   wrangler d1 create barleads-portal
+[[d1_databases]]
+binding = "DB"
+database_name = "barleads-portal"
+database_id = "515fcb84-29c7-4852-b834-5cb2317ac43e"
+
+# After creating the R2 bucket:
+#   wrangler r2 bucket create barleads-media
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "barleads-media"
