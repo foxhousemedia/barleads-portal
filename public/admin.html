@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BarLeads — Admin</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --panel:#fff; --rail:#17181d; --rail-hover:#22242c;
+    --ink:#16181d; --muted:#6b7280; --line:#e6e8ec;
+    --accent:#f5a623; --accent-deep:#e8890c; --accent-soft:#fff4e0;
+    --green:#16a34a; --red:#dc2626; --radius:14px;
+    --shadow:0 1px 2px rgba(16,18,24,.05),0 8px 24px -12px rgba(16,18,24,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  .topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:24px;
+    background:var(--rail);color:#fff;padding:0 20px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#ffc95e,#e8890c);
+    display:grid;place-items:center;color:#17181d;font-weight:800;font-size:16px}
+  .brand-name{font-weight:700;font-size:16px}
+  .brand-name em{font-style:normal;color:var(--accent)}
+  .brand-sub{font-size:11px;color:#9aa0ab}
+  .ro-chip{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.06em;
+    background:rgba(245,166,35,.15);color:var(--accent);padding:5px 12px;border-radius:20px}
+
+  .shell{display:flex;min-height:calc(100vh - 60px)}
+  .rail{width:270px;flex:none;background:var(--rail);color:#c6cad2;padding:18px 12px 24px}
+  .rail-label{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6f7580;padding:0 12px 10px}
+  .rail-item{display:block;width:100%;padding:10px 12px;border-radius:10px;font-size:13px;
+    color:#c6cad2;text-align:left;margin-bottom:2px;border-left:3px solid transparent;transition:all .13s}
+  .rail-item:hover{background:var(--rail-hover);color:#fff}
+  .rail-item.active{background:var(--rail-hover);color:#fff;border-left-color:var(--accent)}
+  .rail-item .v-email{font-weight:600;word-break:break-all}
+  .rail-item .v-meta{font-size:11px;color:#8b919c;margin-top:2px}
+  .rail-item .v-meta .sub{color:var(--accent)}
+
+  .panel{flex:1;padding:32px 40px 80px;max-width:1020px}
+  .panel-title{font-size:24px;font-weight:800;letter-spacing:-.4px;word-break:break-all}
+  .panel-sub{color:var(--muted);margin-top:4px;font-size:13.5px;margin-bottom:24px}
+  .section-h{font-size:16px;font-weight:800;margin:30px 0 12px}
+  .year-h{font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 8px;letter-spacing:.06em}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:12px;padding:16px 18px}
+  .row-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .row-name{font-weight:700;font-size:15px}
+  .chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:#eef0f3;color:var(--muted)}
+  .chip.hot{background:var(--accent-soft);color:var(--accent-deep)}
+  .chip.date{background:#e0e7ff;color:#4338ca}
+  .chip.status-closed{background:#fee2e2;color:#b91c1c}
+  .chip.status-special{background:var(--accent-soft);color:var(--accent-deep)}
+  .chip.status-open{background:#dcfce7;color:#15803d}
+  .promo{display:flex;gap:14px;border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+  .promo-img{width:110px;height:76px;flex:none;border-radius:9px;object-fit:cover;background:#eef0f3}
+  .promo-body{flex:1;min-width:0}
+  .promo-title{font-weight:600}
+  .promo-details{color:var(--muted);font-size:12.5px;white-space:pre-wrap;margin-top:2px}
+  .promo-title:empty::before,.promo-title.empty::before{content:'(no headline)';color:#c0c4cc;font-weight:500}
+  .media-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  .media-strip .m-tile{width:84px;height:84px;border-radius:9px;overflow:hidden;background:#eef0f3;position:relative;flex:none}
+  .media-strip img,.media-strip video{width:100%;height:100%;object-fit:cover;display:block}
+  .m-tile .vid-badge{position:absolute;left:5px;bottom:5px;background:rgba(23,24,29,.75);color:#fff;
+    font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px}
+  .note{color:var(--muted);font-size:12.5px;font-style:italic}
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);
+    border:1.5px dashed var(--line);border-radius:var(--radius);background:rgba(255,255,255,.5)}
+  .sub-table{width:100%;border-collapse:collapse;font-size:13px}
+  .sub-table td{padding:8px 10px;border-bottom:1px solid var(--line)}
+  .center-msg{max-width:520px;margin:80px auto;text-align:center}
+  .center-msg .big{font-size:34px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div>
+      <div class="brand-name">Bar<em>Leads</em></div>
+      <div class="brand-sub">Admin · All Venues</div>
+    </div>
+  </div>
+  <span class="ro-chip">READ-ONLY</span>
+</header>
+
+<div class="shell">
+  <aside class="rail" id="rail"></aside>
+  <main class="panel" id="panel"><div class="center-msg"><div class="big">⏳</div>Loading all venues…</div></main>
+</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const OCC_NAMES={newyearsday:"New Year's Day Recovery",cfpchamp:'College Football Championship',dryjan:'Dry January Feature',
+  superbowl:'Super Bowl Sunday',galentines:"Galentine's Day",valentines:"Valentine's Day",mardigras:'Mardi Gras',
+  stpaddys:"St. Patrick's Day",marchmadness:'March Madness Opening Weekend',springday:'Patio Opening',openingday:'MLB Opening Day',
+  easterbrunch:'Easter Weekend Brunch',fourtwenty:'4/20',cinco:'Cinco de Mayo',derby:'Kentucky Derby',memorial:'Memorial Day Weekend',
+  pride:'Pride Celebration',fathersday:"Father's Day",summerkick:'Summer Kickoff',july4:'Fourth of July',
+  tequiladay:'National Tequila Day',xmasjuly:'Christmas in July',ipaday:'National IPA Day',rumday:'National Rum Day',
+  endsummer:'End-of-Summer Bash',laborday:'Labor Day Weekend',nflkickoff:'NFL Kickoff',oktoberfest:'Oktoberfest Kickoff',
+  oktoberfin:'Oktoberfest Finale',worldseries:'World Series Watch Party',halloween:'Halloween',veterans:'Veterans Day',
+  friendsgiving:'Friendsgiving',blackoutwed:'Blackout Wednesday',uglysweater:'Ugly Sweater Party',
+  xmaseveeve:'Christmas Eve Eve',nye:"New Year's Eve"};
+const HOURS_NAMES={'hrs-newyearsday':"New Year's Day",'hrs-easter':'Easter Sunday','hrs-thanksgiving':'Thanksgiving Day',
+  'hrs-xmaseve':'Christmas Eve','hrs-xmasday':'Christmas Day'};
+const STATUS_LABELS={closed:'Closed',special:'Open — special hours',open:'Open — normal hours'};
+const HOT=new Set(['superbowl','stpaddys','cinco','july4','nflkickoff','halloween','blackoutwed','nye']);
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function vidName(vid){
+  const m=vid.match(/^(.*?)-(actual|fri|sat)$/);
+  const base=m?m[1]:vid, suffix=m?m[2]:null;
+  const name=OCC_NAMES[base]||base;
+  if(suffix==='actual')return'Actual '+name;
+  if(suffix==='fri')return name+' Friday';
+  if(suffix==='sat')return name+' Saturday';
+  return name;
+}
+const isHot=vid=>HOT.has(vid.replace(/-(actual|fri|sat)$/,''));
+const fmtDate=s=>{if(!s)return'';const[y,m,d]=s.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})};
+const fmtTs=s=>s?new Date(s.replace(' ','T')+'Z').toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'—';
+
+let DATA=null, selected=null;
+
+function promoHtml(it){
+  return `<div class="promo">
+    ${it.img?`<img class="promo-img" src="${esc(it.img)}" loading="lazy" alt="">`:''}
+    <div class="promo-body">
+      <div class="promo-title ${it.title?'':'empty'}">${esc(it.title)}</div>
+      ${it.details?`<div class="promo-details">${esc(it.details)}</div>`:''}
+    </div>
+  </div>`;
+}
+function mediaStrip(media){
+  if(!media||!media.length)return'';
+  return `<div class="media-strip">${media.filter(m=>m.src).map(m=>`
+    <div class="m-tile">${m.type==='video'
+      ?`<video src="${esc(m.src)}" muted preload="metadata"></video><span class="vid-badge">VIDEO</span>`
+      :`<img src="${esc(m.src)}" loading="lazy" alt="">`}</div>`).join('')}</div>`;
+}
+
+function renderRail(){
+  const rail=document.getElementById('rail');
+  const lastSub={};
+  (DATA.submissions||[]).forEach(s=>{if(!lastSub[s.email])lastSub[s.email]=s.submitted_at;});
+  rail.innerHTML=`<div class="rail-label">Venues (${DATA.venues.length})</div>`+
+    DATA.venues.map(v=>`<button class="rail-item ${selected===v.email?'active':''}" data-venue="${esc(v.email)}">
+      <span class="v-email">${esc(v.email)}</span>
+      <span class="v-meta">updated ${fmtTs(v.updated_at)}${lastSub[v.email]?` · <span class="sub">submitted ${fmtTs(lastSub[v.email])}</span>`:''}</span>
+    </button>`).join('')+
+    `<div style="height:14px"></div>
+     <button class="rail-item ${selected==='__subs'?'active':''}" data-venue="__subs"><span class="v-email">📋 Submissions log</span></button>`;
+}
+
+function renderVenue(v){
+  const d=v.data||{};
+  let html=`<div class="panel-title">${esc(v.email)}</div>
+    <div class="panel-sub">Last saved ${fmtTs(v.updated_at)} · read-only view of exactly what they entered</div>`;
+
+  // Weekly
+  html+=`<div class="section-h">Weekly Promos</div>`;
+  const weekly=d.weekly||{};
+  const hasWeekly=DAYS.some((_,i)=>(weekly[i]||[]).length);
+  if(!hasWeekly)html+=`<div class="empty">No weekly promos entered.</div>`;
+  else DAYS.forEach((day,i)=>{
+    const items=weekly[i]||[];
+    if(!items.length)return;
+    html+=`<div class="card"><div class="row-h"><span class="row-name">${day}</span><span class="chip">${items.length} promo${items.length>1?'s':''}</span></div>
+      ${items.map(promoHtml).join('')}</div>`;
+  });
+
+  // Monthly — group keys by year
+  html+=`<div class="section-h">Monthly Events</div>`;
+  const years={};
+  Object.entries(d.monthly||{}).forEach(([k,e])=>{
+    if(!e||!e.inc)return;
+    const idx=k.indexOf(':');
+    (years[k.slice(0,idx)]??=[]).push({vid:k.slice(idx+1),...e});
+  });
+  Object.entries(d.customs||{}).forEach(([k,list])=>{
+    (list||[]).forEach(c=>{
+      const idx=k.indexOf(':');
+      (years[k.slice(0,idx)]??=[]).push({custom:true,name:c.name,date:c.date,items:c.items||[],media:c.media||[]});
+    });
+  });
+  const yearKeys=Object.keys(years).sort();
+  if(!yearKeys.length)html+=`<div class="empty">No monthly events included.</div>`;
+  yearKeys.forEach(y=>{
+    const evs=years[y].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    html+=`<div class="year-h">${y} — ${evs.length} event${evs.length>1?'s':''}</div>`;
+    evs.forEach(e=>{
+      const name=e.custom?(e.name||'(unnamed custom event)'):vidName(e.vid);
+      html+=`<div class="card">
+        <div class="row-h"><span class="row-name">${esc(name)}</span>
+          ${e.custom?`<span class="chip" style="background:#e0e7ff;color:#4338ca">CUSTOM</span>`:''}
+          ${!e.custom&&isHot(e.vid)?`<span class="chip hot">HIGH TRAFFIC</span>`:''}
+          ${e.date?`<span class="chip date">${fmtDate(e.date)}</span>`:''}
+        </div>
+        ${(e.items||[]).map(promoHtml).join('')||`<div class="note" style="margin-top:10px">Included, but no promos entered yet.</div>`}
+        ${mediaStrip(e.media)}
+      </div>`;
+    });
+  });
+
+  // Special hours
+  html+=`<div class="section-h">Special Hours / Closures</div>`;
+  let hoursHtml='';
+  Object.entries(d.hoursNotices||{}).forEach(([k,e])=>{
+    if(!e||!e.add)return;
+    const idx=k.indexOf(':');
+    const hid=k.slice(idx+1);
+    hoursHtml+=`<div class="card"><div class="row-h">
+      <span class="row-name">${esc(HOURS_NAMES[hid]||hid)}</span><span class="chip">${k.slice(0,idx)}</span>
+      <span class="chip status-${esc(e.status)}">${STATUS_LABELS[e.status]||esc(e.status)}</span></div>
+      ${e.text?`<div class="promo-details" style="margin-top:8px">"${esc(e.text)}"</div>`:''}</div>`;
+  });
+  Object.entries(d.hoursCustom||{}).forEach(([k,list])=>{
+    (list||[]).forEach(c=>{
+      hoursHtml+=`<div class="card"><div class="row-h">
+        <span class="row-name">${esc(c.name||'(unnamed)')}</span>
+        <span class="chip" style="background:#e0e7ff;color:#4338ca">CUSTOM</span>
+        ${c.date?`<span class="chip date">${fmtDate(c.date)}</span>`:''}
+        <span class="chip status-${esc(c.status)}">${STATUS_LABELS[c.status]||esc(c.status)}</span></div>
+        ${c.text?`<div class="promo-details" style="margin-top:8px">"${esc(c.text)}"</div>`:''}</div>`;
+    });
+  });
+  html+=hoursHtml||`<div class="empty">No closure / special-hours notices added.</div>`;
+  document.getElementById('panel').innerHTML=html;
+}
+
+function renderSubs(){
+  const rows=DATA.submissions||[];
+  document.getElementById('panel').innerHTML=`
+    <div class="panel-title">Submissions log</div>
+    <div class="panel-sub">Every time a venue hit "Submit to BarLeads" (latest 200)</div>
+    ${rows.length?`<div class="card" style="padding:6px 4px"><table class="sub-table">
+      ${rows.map(s=>`<tr><td><b>${esc(s.email)}</b></td><td style="color:var(--muted)">${fmtTs(s.submitted_at)}</td></tr>`).join('')}
+    </table></div>`:`<div class="empty">Nobody has submitted yet.</div>`}`;
+}
+
+function render(){
+  renderRail();
+  if(selected==='__subs')return renderSubs();
+  const v=DATA.venues.find(v=>v.email===selected);
+  if(v)renderVenue(v);
+  else document.getElementById('panel').innerHTML=`<div class="empty">Select a venue on the left.</div>`;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-venue]');
+  if(b){selected=b.dataset.venue;render();}
+});
+
+(async function boot(){
+  try{
+    const res=await fetch('/api/admin');
+    if(res.status===403){
+      document.getElementById('panel').innerHTML=
+        `<div class="center-msg"><div class="big">🚫</div><b>This area is for BarLeads staff only.</b><br>
+         Your login works fine — head back to <a href="/">your portal</a>.</div>`;
+      return;
+    }
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    DATA=await res.json();
+    selected=DATA.venues.length?DATA.venues[0].email:'__subs';
+    render();
+  }catch(err){
+    document.getElementById('panel').innerHTML=
+      `<div class="center-msg"><div class="big">⚠️</div><b>Couldn't load admin data.</b><br>Check your connection and refresh.</div>`;
+  }
+})();
+</script>
+</body>
+</html>

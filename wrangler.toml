@@ -2,6 +2,11 @@ name = "barleads-portal"
 compatibility_date = "2026-07-01"
 pages_build_output_dir = "./public"
 
+# Emails allowed to use the read-only admin view (/admin).
+# Comma-separated. These must ALSO be in the Cloudflare Access policy.
+[vars]
+ADMIN_EMAILS = "sqkyfresh@gmail.com,foxhousemedia@gmail.com"
+
 # After creating the D1 database, paste its ID below:
 #   wrangler d1 create barleads-portal
 [[d1_databases]]

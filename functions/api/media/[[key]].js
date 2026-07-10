@@ -1,6 +1,9 @@
 // GET /api/media/<venue-email>/<file-key>  → streams the object from R2
 // DELETE same path → removes it
 // Venues can only read/delete their own media (key must start with their email).
+// Exception: ADMIN_EMAILS may READ any venue's media (for the /admin view) — never delete.
+
+import { isAdmin } from '../admin.js';
 
 function getEmail(request) {
   const email = request.headers.get('cf-access-authenticated-user-email');
@@ -16,7 +19,7 @@ export async function onRequestGet({ request, params, env }) {
   if (!email) return new Response('Unauthorized', { status: 401 });
 
   const key = getKey(params);
-  if (!key.startsWith(email + '/')) return new Response('Forbidden', { status: 403 });
+  if (!key.startsWith(email + '/') && !isAdmin(email, env)) return new Response('Forbidden', { status: 403 });
 
   const obj = await env.MEDIA.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
