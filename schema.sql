@@ -28,3 +28,10 @@ CREATE TABLE IF NOT EXISTS login_codes (
   expires_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_login_codes_email ON login_codes (email, used, expires_at);
+
+-- Newsletter/brand fields on venues (added July 2026):
+--   website     TEXT — venue's public site; setting it queues brand-guide generation
+--   dropbox_url TEXT — Kevin's Dropbox folder of venue shoot assets (newsletter imagery)
+--   brand       TEXT — brand-guide JSON: {status: 'pending'|'ready', colors, typography,
+--                buttons, corner_radius, motifs, aesthetic, email_rules, logo_url, ...}
+-- (Applied via: ALTER TABLE venues ADD COLUMN website/dropbox_url/brand TEXT)

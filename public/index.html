@@ -298,6 +298,7 @@
   <div class="topbar-right">
     <div class="save-state" id="saveState"><span class="save-dot"></span><span id="saveText">All changes saved</span></div>
     <button class="btn-submit" id="submitBtn">Submit to BarLeads</button>
+    <button id="websiteBtn" title="Set your bar's website — we use it to match our emails to your brand" style="font-size:12px;color:#9aa0ab;padding:6px 4px">🌐 Website</button>
     <button id="logoutBtn" title="Log out" style="font-size:12px;color:#9aa0ab;padding:6px 4px">Log out</button>
   </div>
 </header>
@@ -1081,6 +1082,23 @@ function toast(msg){
   stateLoaded = true;
   render();
 })();
+document.getElementById('websiteBtn').addEventListener('click', async () => {
+  let current = '';
+  try { current = (await (await fetch('/api/venue-settings')).json()).website || ''; } catch {}
+  const url = prompt(
+    "Your bar's website (with or without the https:// part).\n" +
+    "We use it to match our emails to your brand — colors, fonts, the whole vibe.", current);
+  if (url === null) return; // cancelled
+  try {
+    const res = await fetch('/api/venue-settings', { method: 'PUT',
+      headers: {'content-type':'application/json'}, body: JSON.stringify({ website: url }) });
+    const out = await res.json();
+    if (!res.ok) throw new Error(out.error === 'invalid_website' ? "That doesn't look like a website address — try again." : 'HTTP ' + res.status);
+    toast(out.brand_generation === 'queued'
+      ? 'Website saved — we\'ll build your brand style from it ✨'
+      : 'Website saved');
+  } catch (err) { alert(err.message); }
+});
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await fetch('/api/auth/logout', { method: 'POST' });
   location.href = '/login';

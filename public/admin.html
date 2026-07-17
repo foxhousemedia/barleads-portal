@@ -80,6 +80,24 @@
     background:var(--panel);transition:all .15s;
   }
   .rename-btn:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+
+  /* Brand & Newsletter admin section */
+  .bn-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:900px){.bn-grid{grid-template-columns:1fr}}
+  .bn-field{margin-bottom:10px}
+  .bn-field label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .bn-field input[type=text],.bn-field textarea,.bn-field select{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:13px;box-sizing:border-box}
+  .bn-field textarea{min-height:74px;resize:vertical}
+  .bn-swrow{display:flex;gap:8px;flex-wrap:wrap}
+  .bn-sw{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:5px 8px 5px 5px;font-size:11.5px}
+  .bn-sw input[type=color]{width:26px;height:26px;border:none;padding:0;background:none;cursor:pointer}
+  .bn-sw span{color:var(--muted)}
+  .bn-save{background:var(--accent);color:#17181d;font-weight:700;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;border:none}
+  .bn-save:disabled{opacity:.5}
+  .bn-pending{background:#fff7e0;border:1px solid #f5d982;border-radius:10px;padding:12px 14px;font-size:13px;color:#8a6d00}
+  .bn-sched{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .bn-sched .chip{background:#eef2ff;color:#4338ca}
+  .bn-logo{width:56px;height:56px;border-radius:50%;object-fit:contain;background:#23243a;padding:4px}
 </style>
 </head>
 <body>
@@ -92,7 +110,7 @@
       <div class="brand-sub">Admin · All Venues</div>
     </div>
   </div>
-  <span class="ro-chip">READ-ONLY</span>
+  <span class="ro-chip">ADMIN</span>
   <button id="logoutBtn" title="Log out" style="font-size:12px;color:#9aa0ab;padding:6px 4px;cursor:pointer">Log out</button>
 </header>
 
@@ -169,12 +187,123 @@ function renderRail(){
      <button class="rail-item ${selected==='__subs'?'active':''}" data-venue="__subs"><span class="v-email">📋 Submissions log</span></button>`;
 }
 
+
+// ---- Newsletter schedule: last Wednesday of month, then +14 days ----
+function lastWednesday(year, month){ // month 0-11
+  const d = new Date(year, month + 1, 0);       // last day of month
+  d.setDate(d.getDate() - ((d.getDay() + 4) % 7)); // walk back to Wednesday (3)
+  return d;
+}
+function nextSends(n=2){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const out = [];
+  for (let off = -1; off <= 3 && out.length < n; off++){
+    const base = lastWednesday(today.getFullYear(), today.getMonth() + off);
+    const editionB = new Date(base); editionB.setDate(base.getDate() + 14);
+    for (const [d, label] of [[base, 'A'], [editionB, 'B']]){
+      if (d >= today && out.length < n) out.push({date: d, edition: label});
+    }
+  }
+  out.sort((a,b)=>a.date-b.date);
+  return out.slice(0, n);
+}
+const fmtSend = d => d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+function brandSection(v){
+  const b = v.brand;
+  const sends = nextSends(2).map(s =>
+    `<span class="chip">${s.edition === 'A' ? '📬' : '🔁'} ${fmtSend(s.date)} · Edition ${s.edition}</span>`).join('');
+  let inner = '';
+  if (!b) {
+    inner = `<div class="empty" style="margin:0">No brand guide yet — add the venue's website below and one gets generated.</div>`;
+  } else if (b.status === 'pending') {
+    inner = `<div class="bn-pending">⏳ <b>Brand guide queued</b> for ${esc(b.source_url||'their website')}.<br>
+      Next Cowork session, tell Claude: <i>"generate pending brand guides for the portal"</i>.</div>`;
+  } else {
+    const c = b.colors || {};
+    const colorKeys = ['primary','accent','sunset_amber','sunset_orange','bg_card','text_on_light'];
+    inner = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        ${b.logo_url?`<img class="bn-logo" src="${esc(b.logo_url)}" alt="">`:''}
+        <div>
+          <b>${esc(b.venue_display_name||'')}</b>
+          <div style="font-size:12px;color:var(--muted)">${esc(b.location||'')} · scraped ${esc(b.generated||'')} from ${esc(b.source_url||'')}</div>
+        </div>
+      </div>
+      <div class="bn-field"><label>Colors</label>
+        <div class="bn-swrow">${colorKeys.filter(k=>c[k]).map(k=>`
+          <span class="bn-sw"><input type="color" data-bcolor="${k}" value="${esc(c[k])}"><span>${k.replace(/_/g,' ')}</span></span>`).join('')}
+        </div>
+      </div>
+      <div class="bn-grid">
+        <div class="bn-field"><label>Email font stack</label>
+          <input type="text" data-bfield="typography.email_font_stack" value="${esc(b.typography?.email_font_stack||'')}"></div>
+        <div class="bn-field"><label>Mode</label>
+          <select data-bfield="mode"><option value="dark"${b.mode==='dark'?' selected':''}>Dark-first</option><option value="light"${b.mode==='light'?' selected':''}>Light-first</option></select></div>
+        <div class="bn-field"><label>Corner radius</label>
+          <input type="text" data-bfield="corner_radius" value="${esc(b.corner_radius||'')}"></div>
+        <div class="bn-field"><label>Logo URL</label>
+          <input type="text" data-bfield="logo_url" value="${esc(b.logo_url||'')}"></div>
+      </div>
+      <div class="bn-field"><label>Aesthetic / notes for email generation</label>
+        <textarea data-bfield="aesthetic">${esc(b.aesthetic||'')}</textarea></div>`;
+  }
+  return `<div class="section-h">Brand &amp; Newsletter</div>
+    <div class="card" id="brandCard" data-email="${esc(v.email)}">
+      <div class="bn-field"><label>Newsletter — next sends (last Wed + 2 weeks · events within ~37 days)</label>
+        <div class="bn-sched">${sends}</div></div>
+      <div class="bn-grid">
+        <div class="bn-field"><label>Venue website</label>
+          <input type="text" id="bnWebsite" placeholder="https://…" value="${esc(v.website||'')}"></div>
+        <div class="bn-field"><label>Dropbox assets folder (your shoot photos/videos)</label>
+          <input type="text" id="bnDropbox" placeholder="https://www.dropbox.com/…" value="${esc(v.dropbox_url||'')}"></div>
+      </div>
+      ${inner}
+      <button class="bn-save" id="bnSave">Save brand &amp; links</button>
+      <span id="bnStatus" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
+    </div>`;
+}
+
+async function saveBrandCard(){
+  const card = document.getElementById('brandCard');
+  if (!card) return;
+  const email = card.dataset.email;
+  const v = DATA.venues.find(x=>x.email===email);
+  const payload = { email,
+    website: document.getElementById('bnWebsite').value,
+    dropbox_url: document.getElementById('bnDropbox').value };
+  if (v.brand && v.brand.status === 'ready'){
+    const brand = JSON.parse(JSON.stringify(v.brand));
+    card.querySelectorAll('[data-bcolor]').forEach(i=>{ (brand.colors ??= {})[i.dataset.bcolor] = i.value; });
+    card.querySelectorAll('[data-bfield]').forEach(i=>{
+      const path = i.dataset.bfield.split('.');
+      let o = brand; while (path.length > 1) o = (o[path.shift()] ??= {});
+      o[path[0]] = i.value;
+    });
+    payload.brand = brand;
+  }
+  const st = document.getElementById('bnStatus'), btn = document.getElementById('bnSave');
+  btn.disabled = true; st.textContent = 'Saving…';
+  try{
+    const res = await fetch('/api/admin',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    const out = await res.json();
+    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
+    v.website = out.website; v.dropbox_url = out.dropbox_url; v.brand = out.brand;
+    st.textContent = '✓ Saved';
+    setTimeout(()=>{ if(selected===email) render(); }, 600);
+  }catch(err){ st.textContent = '⚠ ' + err.message; }
+  finally{ btn.disabled = false; }
+}
+
 function renderVenue(v){
   const d=v.data||{};
   let html=`<div class="panel-title">${esc(displayName(v))}
       <button class="rename-btn" data-rename="${esc(v.email)}" title="Rename this venue">✏️ Rename</button>
     </div>
-    <div class="panel-sub">${v.venue_name?esc(v.email)+' · ':''}Last saved ${fmtTs(v.updated_at)} · read-only view of exactly what they entered</div>`;
+    <div class="panel-sub">${v.venue_name?esc(v.email)+' · ':''}Last saved ${fmtTs(v.updated_at)} · what they entered (read-only) + brand controls</div>`;
+
+  html+=brandSection(v);
+
 
   // Weekly
   html+=`<div class="section-h">Weekly Promos</div>`;
@@ -266,6 +395,7 @@ function render(){
 }
 
 document.addEventListener('click',e=>{
+  if(e.target.id==='bnSave'){saveBrandCard();return;}
   const r=e.target.closest('[data-rename]');
   if(r){renameVenue(r.dataset.rename);return;}
   const b=e.target.closest('[data-venue]');
