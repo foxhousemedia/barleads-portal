@@ -366,22 +366,18 @@ const OCCASIONS = [
   {id:'openingday',  month:2, name:'MLB Opening Day', desc:'Adjust to your local team’s opener', resolve:y=>lastWeekday(y,2,4)},
   // April
   {id:'easterbrunch',month:3, name:'Easter Weekend Brunch', desc:'Brunch cocktails, family-friendly daytime', resolve:y=>easter(y), dynamicMonth:true},
-  {id:'fourtwenty',  month:3, name:'4/20', desc:'Munchie menu — if it fits your vibe', resolve:y=>new Date(y,3,20)},
   // May
   {id:'cinco',       month:4, name:'Cinco de Mayo', desc:'Margs, tacos, tequila flights', resolve:y=>new Date(y,4,5), breakdown:true, hot:true},
   {id:'derby',       month:4, name:'Kentucky Derby', desc:'Mint juleps & fancy hats', resolve:y=>nthWeekday(y,4,6,1)},
   {id:'memorial',    month:4, name:'Memorial Day Weekend', desc:'Long-weekend party, Saturday anchor', resolve:y=>addDays(lastWeekday(y,4,1),-2)},
   // June
   {id:'pride',       month:5, name:'Pride Celebration', desc:'Pride month party', resolve:y=>lastWeekday(y,5,6)},
+  {id:'mothersday',  month:4, name:"Mother's Day Brunch", desc:'2nd Sunday — the biggest brunch day of the year', resolve:y=>addDays(nthWeekday(y,4,0,1),7), hot:true},
   {id:'fathersday',  month:5, name:"Father's Day", desc:'Beer & BBQ specials', resolve:y=>nthWeekday(y,5,0,3)},
   {id:'summerkick',  month:5, name:'Summer Kickoff', desc:'First day of summer / finals watch parties', resolve:y=>new Date(y,5,20)},
   // July
   {id:'july4',       month:6, name:'Fourth of July', desc:'All-American cookout & drink specials', resolve:y=>new Date(y,6,4), hot:true},
-  {id:'tequiladay',  month:6, name:'National Tequila Day', desc:'July 24 — flights & marg specials', resolve:y=>new Date(y,6,24)},
-  {id:'xmasjuly',    month:6, name:'Christmas in July', desc:'Mid-summer holiday gimmick that works', resolve:y=>new Date(y,6,25)},
   // August
-  {id:'ipaday',      month:7, name:'National IPA Day', desc:'First Thursday — craft beer feature', resolve:y=>nthWeekday(y,7,4,1)},
-  {id:'rumday',      month:7, name:'National Rum Day', desc:'Aug 16 — tiki night', resolve:y=>new Date(y,7,16)},
   {id:'endsummer',   month:7, name:'End-of-Summer Bash', desc:'Last blowout before fall', resolve:y=>lastWeekday(y,7,6)},
   // September
   {id:'laborday',    month:8, name:'Labor Day Weekend', desc:'Long-weekend party, Saturday anchor', resolve:y=>addDays(nthWeekday(y,8,1,1),-2)},
@@ -392,7 +388,6 @@ const OCCASIONS = [
   {id:'worldseries', month:9, name:'World Series Watch Party', desc:'Adjust to the series schedule', resolve:y=>nthWeekday(y,9,5,3)},
   {id:'halloween',   month:9, name:'Halloween', desc:'Costume contest, themed cocktails', resolve:y=>new Date(y,9,31), breakdown:true, hot:true},
   // November
-  {id:'veterans',    month:10, name:'Veterans Day', desc:'Military specials & appreciation night', resolve:y=>new Date(y,10,11)},
   {id:'friendsgiving',month:10,name:'Friendsgiving', desc:'Group parties the weekend before Thanksgiving', resolve:y=>addDays(thanksgiving(y),-5)},
   {id:'blackoutwed', month:10, name:'Thanksgiving Eve ("Blackout Wednesday")', desc:'Biggest bar night of the year — no exaggeration', resolve:y=>addDays(thanksgiving(y),-1), hot:true},
   // December
