@@ -6,6 +6,7 @@ pages_build_output_dir = "./public"
 # Comma-separated. These must ALSO be in the Cloudflare Access policy.
 [vars]
 ADMIN_EMAILS = "sqkyfresh@gmail.com,foxhousemedia@gmail.com"
+MAIL_FROM = "BarLeads <login@bar-leads.com>"
 
 # After creating the D1 database, paste its ID below:
 #   wrangler d1 create barleads-portal
@@ -19,3 +20,10 @@ database_id = "515fcb84-29c7-4852-b834-5cb2317ac43e"
 [[r2_buckets]]
 binding = "MEDIA"
 bucket_name = "barleads-media"
+
+# --- Custom auth (replaced Cloudflare Access) ---
+# Secrets set in the Pages dashboard (Settings → Environment variables), NOT here:
+#   AUTH_SECRET      – random string signing session cookies + code hashes (required)
+#   RESEND_API_KEY   – Resend API key for sending login-code emails (production)
+#   DEV_ECHO_CODES   – "true" in the PREVIEW environment only: returns codes in the
+#                      API response for testing instead of sending email. NEVER in production.

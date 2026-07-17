@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — BarLeads Client Portal</title>
+<style>
+  :root{
+    --bg:#17181d; --panel:#ffffff; --ink:#16181d; --muted:#6b7280; --line:#e6e8ec;
+    --accent:#f5a623; --accent-deep:#e8890c; --accent-soft:#fff4e0;
+    --green:#16a34a; --red:#dc2626; --radius:14px;
+    --shadow:0 1px 2px rgba(0,0,0,.2),0 16px 48px -12px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    display:grid;place-items:center;padding:20px;
+  }
+  button,input{font:inherit;color:inherit}
+
+  .card{
+    width:100%;max-width:400px;background:var(--panel);border-radius:18px;
+    box-shadow:var(--shadow);padding:32px 28px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .brand-mark{
+    width:36px;height:36px;border-radius:10px;flex:none;
+    background:linear-gradient(135deg,#ffc95e,#e8890c);
+    display:grid;place-items:center;color:#17181d;font-weight:800;font-size:18px;
+    box-shadow:0 2px 8px rgba(245,166,35,.45);
+  }
+  .brand-name{font-weight:700;font-size:17px;letter-spacing:-.2px}
+  .brand-name em{font-style:normal;color:var(--accent-deep)}
+  .brand-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+  h1{font-size:19px;letter-spacing:-.3px;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+
+  label{display:block;font-weight:600;font-size:12.5px;margin-bottom:6px}
+  input[type=email]{
+    width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;
+    font-size:15px;outline:none;transition:border-color .15s;
+  }
+  input[type=email]:focus{border-color:var(--accent)}
+
+  .code-row{display:flex;gap:8px;justify-content:space-between}
+  .code-box{
+    width:100%;max-width:52px;height:56px;text-align:center;font-size:24px;font-weight:700;
+    border:1.5px solid var(--line);border-radius:10px;outline:none;transition:border-color .15s;
+  }
+  .code-box:focus{border-color:var(--accent)}
+
+  .btn{
+    width:100%;margin-top:16px;padding:12px;border:none;border-radius:10px;cursor:pointer;
+    background:linear-gradient(135deg,#ffc95e,var(--accent-deep));color:#17181d;
+    font-weight:700;font-size:14.5px;transition:filter .15s, opacity .15s;
+  }
+  .btn:hover{filter:brightness(1.05)}
+  .btn:disabled{opacity:.55;cursor:default}
+
+  .error{
+    display:none;margin-top:14px;padding:11px 13px;border-radius:10px;
+    background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:13px;
+  }
+  .error.show{display:block}
+  .error a{color:#991b1b;font-weight:600}
+  .nowrap{white-space:nowrap}
+
+  .hint{margin-top:14px;font-size:12.5px;color:var(--muted);text-align:center}
+  .hint button{border:none;background:none;color:var(--accent-deep);font-weight:600;cursor:pointer;font-size:12.5px}
+  .hint button:disabled{color:var(--muted);cursor:default;font-weight:500}
+
+  .sent-note{
+    display:none;margin-bottom:16px;padding:11px 13px;border-radius:10px;
+    background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:13px;
+  }
+  .sent-note.show{display:block}
+  .step{display:none}
+  .step.active{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-mark">B</div>
+    <div>
+      <div class="brand-name">Bar<em>Leads</em></div>
+      <div class="brand-sub">Client Portal</div>
+    </div>
+  </div>
+
+  <!-- Step 1: email -->
+  <div class="step active" id="stepEmail">
+    <h1>Log in</h1>
+    <p class="sub">Enter your bar's email address and we'll send you a 6-digit login code. No password needed.</p>
+    <form id="emailForm" novalidate>
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@yourbar.com" autocomplete="email" autofocus>
+      <button class="btn" id="sendBtn" type="submit">Send login code</button>
+    </form>
+    <div class="error" id="emailError"></div>
+  </div>
+
+  <!-- Step 2: code -->
+  <div class="step" id="stepCode">
+    <h1>Check your inbox</h1>
+    <div class="sent-note show" id="sentNote"></div>
+    <form id="codeForm" novalidate>
+      <label>6-digit code</label>
+      <div class="code-row" id="codeRow">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1">
+      </div>
+      <button class="btn" id="verifyBtn" type="submit">Log in</button>
+    </form>
+    <div class="error" id="codeError"></div>
+    <p class="hint">
+      Didn't get it? Check spam, or
+      <button type="button" id="resendBtn">send a new code</button>
+      · <button type="button" id="backBtn">use a different email</button>
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const stepEmail = $('stepEmail'), stepCode = $('stepCode');
+  const emailInput = $('email'), sendBtn = $('sendBtn'), emailError = $('emailError');
+  const codeError = $('codeError'), verifyBtn = $('verifyBtn'), sentNote = $('sentNote');
+  const boxes = Array.from(document.querySelectorAll('.code-box'));
+  let currentEmail = '';
+
+  const CONTACT = 'If the problem persists, contact <a href="mailto:Kevin@Bar-Leads.com" class="nowrap">Kevin@Bar-Leads.com</a> and we\'ll get you sorted.';
+
+  const MESSAGES = {
+    no_account: 'No account on file for that email — please try another one. ' + CONTACT,
+    invalid_email: 'That doesn\'t look like an email address — please check it and try again.',
+    rate_limited: 'Too many codes requested — wait 15 minutes and try again. ' + CONTACT,
+    send_failed: 'We couldn\'t send the email just now — try again in a minute. ' + CONTACT,
+    send_not_configured: 'Login emails aren\'t set up yet — ' + CONTACT,
+    expired: 'That code has expired — request a new one below.',
+    wrong_code: 'That code isn\'t right — double-check the email and try again.',
+    too_many_attempts: 'Too many wrong tries — request a new code below.',
+    generic: 'Something went wrong — please try again. ' + CONTACT,
+  };
+
+  function showError(el, key){
+    el.innerHTML = MESSAGES[key] || MESSAGES.generic;
+    el.classList.add('show');
+  }
+  function hideErrors(){
+    emailError.classList.remove('show');
+    codeError.classList.remove('show');
+  }
+
+  async function requestCode(email, btn){
+    hideErrors();
+    btn.disabled = true;
+    const oldText = btn.textContent;
+    btn.textContent = 'Sending…';
+    try{
+      const r = await fetch('/api/auth/request-code', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok){
+        showError(stepCode.classList.contains('active') ? codeError : emailError, data.error);
+        return false;
+      }
+      currentEmail = email;
+      sentNote.textContent = 'Code sent to ' + email + '. It expires in 10 minutes.';
+      if (data.dev_code) sentNote.textContent += ' [TEST MODE — code: ' + data.dev_code + ']';
+      return true;
+    } catch(e){
+      showError(emailError, 'generic');
+      return false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }
+  }
+
+  $('emailForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) return;
+    if (await requestCode(email, sendBtn)){
+      stepEmail.classList.remove('active');
+      stepCode.classList.add('active');
+      boxes.forEach(b => b.value = '');
+      boxes[0].focus();
+    }
+  });
+
+  $('resendBtn').addEventListener('click', async () => {
+    const btn = $('resendBtn');
+    btn.disabled = true;
+    await requestCode(currentEmail, verifyBtn);
+    setTimeout(() => { btn.disabled = false; }, 15000);
+  });
+
+  $('backBtn').addEventListener('click', () => {
+    hideErrors();
+    stepCode.classList.remove('active');
+    stepEmail.classList.add('active');
+    emailInput.focus();
+  });
+
+  // Code boxes: auto-advance, backspace, paste-all-6.
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g, '').slice(0, 1);
+      if (box.value && i < 5) boxes[i+1].focus();
+      maybeSubmit();
+    });
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+    });
+    box.addEventListener('paste', (e) => {
+      const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '');
+      if (text.length >= 2){
+        e.preventDefault();
+        text.slice(0, 6).split('').forEach((ch, j) => { if (boxes[j]) boxes[j].value = ch; });
+        boxes[Math.min(text.length, 6) - 1].focus();
+        maybeSubmit();
+      }
+    });
+  });
+
+  function code(){ return boxes.map(b => b.value).join(''); }
+  function maybeSubmit(){ if (code().length === 6) $('codeForm').requestSubmit(); }
+
+  let verifying = false;
+  $('codeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (verifying || code().length !== 6) return;
+    verifying = true;
+    hideErrors();
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Checking…';
+    try{
+      const r = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email: currentEmail, code: code() }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok){
+        showError(codeError, data.error);
+        boxes.forEach(b => b.value = '');
+        boxes[0].focus();
+        return;
+      }
+      const next = new URLSearchParams(location.search).get('next');
+      location.href = (next && next.startsWith('/') && !next.startsWith('//')) ? next : (data.redirect || '/');
+    } catch(err){
+      showError(codeError, 'generic');
+    } finally {
+      verifying = false;
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Log in';
+    }
+  });
+})();
+</script>
+</body>
+</html>

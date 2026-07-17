@@ -93,6 +93,7 @@
     </div>
   </div>
   <span class="ro-chip">READ-ONLY</span>
+  <button id="logoutBtn" title="Log out" style="font-size:12px;color:#9aa0ab;padding:6px 4px;cursor:pointer">Log out</button>
 </header>
 
 <div class="shell">
@@ -306,6 +307,10 @@ async function renameVenue(email){
       `<div class="center-msg"><div class="big">⚠️</div><b>Couldn't load admin data.</b><br>Check your connection and refresh.</div>`;
   }
 })();
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  location.href = '/login';
+});
 </script>
 </body>
 </html>
