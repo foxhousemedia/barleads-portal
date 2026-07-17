@@ -23,7 +23,16 @@ export async function onRequest(context) {
   const isPublic =
     PUBLIC_PATHS.includes(path) || PUBLIC_PREFIXES.some(p => path.startsWith(p));
 
-  const email = await getSessionEmailFromCookie(request, env);
+  let email = await getSessionEmailFromCookie(request, env);
+
+  // Headless automation (scheduled newsletter tick / scraping sessions):
+  // a valid X-Automation-Secret acts as the first admin identity.
+  if (!email && env.AUTOMATION_SECRET) {
+    const secret = request.headers.get('x-automation-secret');
+    if (secret && secret === env.AUTOMATION_SECRET) {
+      email = (env.ADMIN_EMAILS || '').split(',')[0].trim().toLowerCase() || null;
+    }
+  }
 
   // Logged-in users who hit /login go straight to the portal.
   if (email && (path === '/login' || path === '/login.html')) {

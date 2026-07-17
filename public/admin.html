@@ -259,6 +259,16 @@ function brandSection(v){
           <input type="text" id="bnDropbox" placeholder="https://www.dropbox.com/…" value="${esc(v.dropbox_url||'')}"></div>
       </div>
       ${inner}
+      <div class="bn-field" style="margin-top:14px"><label>Event suggestions (staged for the venue's one-click add)</label>
+        ${(v.suggestions||[]).length ? (v.suggestions||[]).map(sg=>`
+          <div style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px">
+            ${sg.img?`<img src="${esc(sg.img)}" style="width:38px;height:38px;border-radius:6px;object-fit:cover" alt="">`:''}
+            <span style="flex:1"><b>${esc(sg.title)}</b> · ${esc(sg.date)} · <span style="color:var(--muted)">${esc(sg.source||'')}</span></span>
+            <span class="chip ${sg.status==='pending'?'':'date'}">${esc(sg.status)}</span>
+            <button data-sugg-del="${esc(sg.id)}" data-sugg-email="${esc(v.email)}" style="border:none;background:none;cursor:pointer;color:var(--red)" title="Delete">🗑</button>
+          </div>`).join('') : `<div style="font-size:12.5px;color:var(--muted)">None staged. The T-3 scrape (or you, right here) can add some.</div>`}
+        <button class="bn-save" style="background:#eef2ff;color:#4338ca;margin-top:4px" data-sugg-new="${esc(v.email)}">＋ Stage a suggestion</button>
+      </div>
       <button class="bn-save" id="bnSave">Save brand &amp; links</button>
       <span id="bnStatus" style="font-size:12px;color:var(--muted);margin-left:10px"></span>
     </div>`;
@@ -404,8 +414,32 @@ function render(){
   else document.getElementById('panel').innerHTML=`<div class="empty">Select a venue on the left.</div>`;
 }
 
+async function adminSuggest(email, payload){
+  const res = await fetch('/api/admin',{method:'PUT',headers:{'content-type':'application/json'},
+    body: JSON.stringify({email, ...payload})});
+  if(!res.ok){ alert('Failed: HTTP '+res.status); return false; }
+  const fresh = await (await fetch('/api/admin')).json();
+  DATA = fresh; render();
+  return true;
+}
 document.addEventListener('click',e=>{
   if(e.target.id==='bnSave'){saveBrandCard();return;}
+  const sn = e.target.closest('[data-sugg-new]');
+  if(sn){
+    const email = sn.dataset.suggNew;
+    const title = prompt('Event title (as the venue announced it):'); if(!title) return;
+    const date = prompt('Date (YYYY-MM-DD):'); if(!date) return;
+    const desc = prompt('Short description (optional):') || '';
+    const img = prompt('Image URL (from their social post, optional):') || '';
+    const source = prompt('Source (e.g. "IG post 7/15", "website events page"):') || 'admin';
+    adminSuggest(email, {suggestion_add:{title, date, desc, img, source}});
+    return;
+  }
+  const sd = e.target.closest('[data-sugg-del]');
+  if(sd){
+    if(confirm('Delete this suggestion?')) adminSuggest(sd.dataset.suggEmail, {suggestion_del: sd.dataset.suggDel});
+    return;
+  }
   const r=e.target.closest('[data-rename]');
   if(r){renameVenue(r.dataset.rename);return;}
   const b=e.target.closest('[data-venue]');

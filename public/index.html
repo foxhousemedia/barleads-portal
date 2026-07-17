@@ -182,6 +182,16 @@
   .chip.hot{background:var(--accent-soft);color:var(--accent-deep)}
   .occ-desc{color:var(--muted);font-size:12.5px;margin-top:2px}
   .occ-controls{display:flex;align-items:center;gap:16px;flex:none}
+  .sugg-banner{background:linear-gradient(135deg,#fff9e8,#fff4d6);border:1.5px solid #f5d982;border-radius:var(--radius);padding:16px 18px;margin-bottom:18px}
+  .sugg-title{font-weight:700;font-size:14px;margin-bottom:2px}
+  .sugg-sub{font-size:12.5px;color:#8a6d00;margin-bottom:12px}
+  .sugg-card{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #eee2b8;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .sugg-img{width:56px;height:56px;border-radius:8px;object-fit:cover;flex:none;background:#f4f5f7}
+  .sugg-body{flex:1;min-width:0}
+  .sugg-name{font-weight:600;font-size:13.5px}
+  .sugg-meta{font-size:12px;color:var(--muted)}
+  .sugg-add{background:var(--accent);color:#17181d;font-weight:700;border-radius:8px;padding:7px 14px;font-size:12.5px;cursor:pointer;border:none;flex:none}
+  .sugg-x{color:var(--muted);font-size:16px;cursor:pointer;padding:6px;flex:none;background:none;border:none}
   .ticket-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:15px}
   .ticket-row .f-input{flex:1;font-size:13px}
   .date-input{
@@ -666,7 +676,20 @@ function renderPanel(){
     const variants = occasionsForMonth(month, year);
     const customs = customList(month);
     const hasBreakdown = variants.some(v=>/-(actual|fri|sat)$/.test(v.vid));
+    const suggs = (window.SUGG||[]).filter(sg => { const d = new Date(sg.date+'T12:00:00'); return d.getFullYear()===year && d.getMonth()===month; });
+    const suggHtml = suggs.length ? `<div class="sugg-banner">
+        <div class="sugg-title">✨ Spotted on your socials &amp; website</div>
+        <div class="sugg-sub">Events you've announced that aren't in here yet — add them with one click.</div>
+        ${suggs.map(sg=>`<div class="sugg-card">
+          ${sg.img?`<img class="sugg-img" src="${esc(sg.img)}" alt="">`:''}
+          <div class="sugg-body"><div class="sugg-name">${esc(sg.title)}</div>
+            <div class="sugg-meta">${fmt(new Date(sg.date+'T12:00:00'))}${sg.desc?` · ${esc(sg.desc.slice(0,80))}`:''}</div></div>
+          <button class="sugg-add" data-sugg-accept="${esc(sg.id)}">+ Add</button>
+          <button class="sugg-x" data-sugg-dismiss="${esc(sg.id)}" title="Dismiss">✕</button>
+        </div>`).join('')}
+      </div>` : '';
     panel.innerHTML = `
+      ${suggHtml}
       <div class="panel-head">
         <div class="panel-title">${MONTHS[month]} ${year}</div>
         <div class="panel-sub">Toggle <b>Include?</b> on the events you're running, adjust the date if your party lands on a different night, then add your promos.</div>
@@ -866,6 +889,25 @@ document.addEventListener('click', e=>{
   const tab = t.closest('[data-tab]');
   if(tab){ state.tab = tab.dataset.tab; save(); render(); return; }
 
+  const sa = t.closest('[data-sugg-accept],[data-sugg-dismiss]');
+  if(sa){
+    const accept = sa.hasAttribute('data-sugg-accept');
+    const sid = accept ? sa.dataset.suggAccept : sa.dataset.suggDismiss;
+    sa.disabled = true;
+    fetch('/api/suggestions',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({id:sid, action:accept?'accept':'dismiss'})})
+      .then(r=>r.json()).then(out=>{
+        window.SUGG = (window.SUGG||[]).filter(x=>x.id!==sid);
+        if(accept && out.event){
+          const d = new Date(out.event.date+'T12:00:00');
+          const key = `${d.getFullYear()}:${d.getMonth()}`;
+          (state.customs[key] ??= []).push(out.event);
+          toast('Added to your events 🎉');
+        }
+        render();
+      }).catch(()=>{ sa.disabled=false; toast('Couldn\u2019t do that — try again.'); });
+    return;
+  }
   const navDay = t.closest('[data-nav-day]');
   if(navDay){ const v = navDay.dataset.navDay; state.day = v==='hh' ? 'hh' : Number(v); save(); render(); return; }
 
@@ -1103,6 +1145,7 @@ function toast(msg){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     if(data) state = Object.assign(state, data);
+    try{ window.SUGG = (await (await fetch('/api/suggestions')).json()).suggestions || []; }catch{ window.SUGG = []; }
     if(!state.happyHour) state.happyHour = {text:'', url:''};
   }catch(err){
     document.getElementById('panel').innerHTML =

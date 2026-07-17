@@ -37,7 +37,40 @@ itemized list.
   (`dropbox_url`). Monthly newsletter visuals get generated with Higgsfield from those
   assets. Faces: avoid focusing on them; blur/overlay graphics when present (TBD).
 
-## Not built yet (next phases)
-- Subscriber lists (photobooth-captured emails) + storage/import
-- Send engine (Resend batch or similar), unsubscribe handling, tracking
-- Automated brand-guide generation triggered without Claude-in-the-loop
+## Send pipeline (Kevin's spec, July 2026)
+
+Per venue, per edition (A = last Wed of month, B = A + 14 days):
+
+- **T-3 days — scrape & suggest.** Claude scrapes the venue's WEBSITE + SOCIAL MEDIA for
+  announced events in the upcoming window. Any event the venue has publicly announced but
+  hasn't entered in the portal (e.g. an anniversary party on IG) becomes a SUGGESTION in
+  the backend: title, date, description, and the image pulled from the social post.
+  RULES: never invent events; never ask the venue about things they've already announced —
+  just stage them. Suggestions land in D1 with status=pending.
+- **T-2 days — preview email to the bar manager.** Subject: how the newsletter is
+  currently looking. Body = the fully rendered branded newsletter as it stands, then a
+  **"Do you want to add?"** section — pending suggestions rendered as slightly grayed-out
+  event cards (with their social images) — then a **"Click here to make edits"** button
+  linking to the portal. In the portal the same suggestions sit at the top with the image
+  ready, addable with ONE click (or dismissible).
+- **T-0 — send.** Edition A: events within ~37 days (all of next month). Edition B:
+  re-iterate remaining + 2 weeks into the following month. UNTIL SUBSCRIBER LISTS EXIST,
+  the "send" goes to the venue manager + Kevin as a dress rehearsal, and the send is
+  logged as list_pending.
+
+### Mechanics
+- Clock: Cloudflare Pages has no cron. A daily Claude scheduled task (morning PT) POSTs
+  `/api/newsletter-tick` with header `X-Automation-Secret` (env AUTOMATION_SECRET). The
+  endpoint computes T-values per edition and does the deterministic work (render + send
+  previews/sends via Resend, log to `newsletter_log`). The T-3 scraping is done by the
+  Claude session itself (website via fetch always; Instagram only when Kevin's Chrome is
+  connected — degrade to website-only and note it in the suggestion source).
+- Automation auth: API endpoints accept EITHER a session cookie OR X-Automation-Secret
+  (admin-level) so headless sessions don't depend on interactive login.
+- Suggestion images: IG CDN URLs expire — during scraping, re-host the image (fetch in
+  browser context → upload to venue's R2 namespace) whenever possible; fall back to the
+  CDN URL with a re-host TODO flag.
+
+## Not built yet (later phases)
+- Subscriber lists (photobooth-captured emails) + storage/import + unsubscribe/tracking
+- Automated brand-guide generation without Claude-in-the-loop
