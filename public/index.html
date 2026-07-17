@@ -182,6 +182,8 @@
   .chip.hot{background:var(--accent-soft);color:var(--accent-deep)}
   .occ-desc{color:var(--muted);font-size:12.5px;margin-top:2px}
   .occ-controls{display:flex;align-items:center;gap:16px;flex:none}
+  .ticket-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:15px}
+  .ticket-row .f-input{flex:1;font-size:13px}
   .date-input{
     border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fbfbfc;
     font-size:13px;outline:none;color:var(--ink);
@@ -676,6 +678,7 @@ function renderPanel(){
             </div>
           </div>
           ${entry.inc ? `<div class="occ-body">
+            <div class="ticket-row">🎟 <input class="f-input" type="text" placeholder="Ticket link (optional — only if this event is ticketed), e.g. eventbrite.com/…" value="${esc(entry.ticket||'')}" data-field="ticket" data-scope="monthly" ${attrs}></div>
             ${mediaGalleryHtml(entry.media, 'monthly', attrs)}
             <div class="occ-body-label">Promos for this event</div>
             ${entry.items.map(it=>promoItemHtml(it,'monthly',attrs)).join('')}
@@ -698,6 +701,7 @@ function renderPanel(){
             </div>
           </div>
           <div class="occ-body">
+            <div class="ticket-row">🎟 <input class="f-input" type="text" placeholder="Ticket link (optional — only if this event is ticketed), e.g. eventbrite.com/…" value="${esc(c.ticket||'')}" data-field="ticket" data-scope="custom" ${attrs}></div>
             ${mediaGalleryHtml(c.media||[], 'custom', attrs)}
             <div class="occ-body-label">Promos for this event</div>
             ${c.items.map(it=>promoItemHtml(it,'custom',attrs)).join('')}
@@ -1011,6 +1015,15 @@ function onFieldEdit(t){
     } else if(scope==='custom'){
       const c = customList(Number(t.dataset.month)).find(c=>c.id===t.dataset.customId);
       if(c) c.date = t.value;
+    }
+    save(); return;
+  }
+  if(field==='ticket'){
+    if(scope==='monthly'){
+      state.monthly[`${state.year}:${t.dataset.vid}`].ticket = t.value.trim();
+    } else if(scope==='custom'){
+      const c = customList(Number(t.dataset.month)).find(c=>c.id===t.dataset.customId);
+      if(c) c.ticket = t.value.trim();
     }
     save(); return;
   }

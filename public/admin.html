@@ -328,7 +328,7 @@ function renderVenue(v){
   Object.entries(d.customs||{}).forEach(([k,list])=>{
     (list||[]).forEach(c=>{
       const idx=k.indexOf(':');
-      (years[k.slice(0,idx)]??=[]).push({custom:true,name:c.name,date:c.date,items:c.items||[],media:c.media||[]});
+      (years[k.slice(0,idx)]??=[]).push({custom:true,name:c.name,date:c.date,ticket:c.ticket||null,items:c.items||[],media:c.media||[]});
     });
   });
   const yearKeys=Object.keys(years).sort();
@@ -343,6 +343,7 @@ function renderVenue(v){
           ${e.custom?`<span class="chip" style="background:#e0e7ff;color:#4338ca">CUSTOM</span>`:''}
           ${!e.custom&&isHot(e.vid)?`<span class="chip hot">HIGH TRAFFIC</span>`:''}
           ${e.date?`<span class="chip date">${fmtDate(e.date)}</span>`:''}
+          ${e.ticket?`<a class="chip" style="background:#fff4e0;color:#8a6d00;text-decoration:none" href="${esc(/^https?:\/\//i.test(e.ticket)?e.ticket:'https://'+e.ticket)}" target="_blank" rel="noopener">🎟 Tickets ↗</a>`:''}
         </div>
         ${(e.items||[]).map(promoHtml).join('')||`<div class="note" style="margin-top:10px">Included, but no promos entered yet.</div>`}
         ${mediaStrip(e.media)}
