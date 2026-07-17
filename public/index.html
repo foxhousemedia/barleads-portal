@@ -463,6 +463,7 @@ let state = {
   customs:{},                   // `${year}:${month}` -> [{id,name,date,items,media}]
   hoursNotices:{},              // `${year}:${hid}` -> {add, status, text}
   hoursCustom:{},               // `${year}:${month}` -> [{id,name,date,status,text}]
+  happyHour:{text:'', url:''},  // standing happy-hour block — bottom of every newsletter
 };
 let stateLoaded = false;        // no saves until the server copy is merged in
 
@@ -572,7 +573,10 @@ function renderRail(){
         const n = weeklyCount(i);
         return `<button class="rail-item ${state.day===i?'active':''}" data-nav-day="${i}">
           <span>${d}</span><span class="rail-badge ${n?'has':''}">${n}</span></button>`;
-      }).join('');
+      }).join('') +
+      `<div style="height:14px"></div><div class="rail-label">Standing Info</div>
+      <button class="rail-item ${state.day==='hh'?'active':''}" data-nav-day="hh">
+        <span>🍹 Happy Hour</span><span class="rail-badge ${state.happyHour.text?'has':''}">${state.happyHour.text?'✓':''}</span></button>`;
   } else {
     // Portal launched in 2026 — allow looking one year back, but never before 2026.
     const BUILD_YEAR = 2026;
@@ -638,6 +642,21 @@ function renderPanel(){
   const panel = document.getElementById('panel');
   if(state.tab==='weekly'){
     const day = state.day;
+    if(day==='hh'){
+      panel.innerHTML = `
+        <div class="panel-head">
+          <div class="panel-title">Happy Hour</div>
+          <div class="panel-sub">This appears at the very bottom of every newsletter as one simple block — days &amp; times, not a list of items.</div>
+        </div>
+        <div class="card">
+          <div class="occ-body-label">Your happy hour, in one line or two</div>
+          <textarea class="f-input f-details" style="min-height:70px" placeholder="e.g. Monday through Friday | 4–6PM" data-field="hhtext">${esc(state.happyHour.text)}</textarea>
+          <div class="occ-body-label" style="margin-top:14px">Link to your happy hour / specials page (optional)</div>
+          <input class="f-input" type="text" placeholder="e.g. yourbar.com/specials" value="${esc(state.happyHour.url)}" data-field="hhurl">
+          <div class="media-hint" style="margin-top:10px">With a link, the email shows a "See More Info" button under your text. Without one, just the text shows — no empty button.</div>
+        </div>`;
+      return;
+    }
     const items = state.weekly[day] || [];
     panel.innerHTML = `
       <div class="panel-head">
@@ -853,7 +872,7 @@ document.addEventListener('click', e=>{
   if(tab){ state.tab = tab.dataset.tab; save(); render(); return; }
 
   const navDay = t.closest('[data-nav-day]');
-  if(navDay){ state.day = Number(navDay.dataset.navDay); save(); render(); return; }
+  if(navDay){ const v = navDay.dataset.navDay; state.day = v==='hh' ? 'hh' : Number(v); save(); render(); return; }
 
   const navMonth = t.closest('[data-nav-month]');
   if(navMonth){ state.month = Number(navMonth.dataset.navMonth); save(); render(); return; }
@@ -1018,6 +1037,8 @@ function onFieldEdit(t){
     }
     save(); return;
   }
+  if(field==='hhtext'){ state.happyHour.text = t.value; save(); return; }
+  if(field==='hhurl'){ state.happyHour.url = t.value.trim(); save(); return; }
   if(field==='ticket'){
     if(scope==='monthly'){
       state.monthly[`${state.year}:${t.dataset.vid}`].ticket = t.value.trim();
@@ -1087,6 +1108,7 @@ function toast(msg){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     if(data) state = Object.assign(state, data);
+    if(!state.happyHour) state.happyHour = {text:'', url:''};
   }catch(err){
     document.getElementById('panel').innerHTML =
       '<div class="empty"><div class="big">⚠️</div><b>Couldn’t load your saved promos.</b><br>Check your connection and refresh the page.</div>';

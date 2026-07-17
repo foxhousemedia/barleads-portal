@@ -317,6 +317,15 @@ function renderVenue(v){
       ${items.map(promoHtml).join('')}</div>`;
   });
 
+  // Happy hour (standing newsletter block)
+  html+=`<div class="section-h">Happy Hour (bottom of every newsletter)</div>`;
+  const hh=d.happyHour||{};
+  if(!hh.text&&!hh.url)html+=`<div class="empty">No happy hour info entered.</div>`;
+  else html+=`<div class="card"><div class="promo-body">
+    <div class="promo-title">${esc(hh.text||'(no text)')}</div>
+    ${hh.url?`<div class="promo-details">🔗 <a href="${esc(/^https?:\/\//i.test(hh.url)?hh.url:'https://'+hh.url)}" target="_blank" rel="noopener">${esc(hh.url)}</a> → "See More Info" button in the email</div>`:`<div class="promo-details" style="color:var(--muted)">No link — email shows text only (no button).</div>`}
+  </div></div>`;
+
   // Monthly — group keys by year
   html+=`<div class="section-h">Monthly Events</div>`;
   const years={};
