@@ -114,11 +114,13 @@ export async function onRequestPost({ request, env }) {
     for (const s of sends) {
       const tMinus = (new Date(s.sendDate + 'T00:00:00Z') - new Date(todayIso + 'T00:00:00Z')) / 86400e3;
 
-      if (tMinus === 3) {
+      // Windows, not exact days: if a daily tick is missed (machine asleep, outage),
+      // the next tick catches up. newsletter_log dedupe prevents double-fires.
+      if (tMinus <= 3 && tMinus >= 1) {
         actions.push({ venue: venue.email, edition: s.edition, sendDate: s.sendDate, action: 'scrape_due', website: venue.website, instagram: venue.brand?.socials?.instagram || null });
       }
 
-      if (tMinus === 2 && !(await alreadyLogged(env, venue.email, s.edition, 'preview', s.sendDate))) {
+      if (tMinus <= 2 && tMinus >= 1 && !(await alreadyLogged(env, venue.email, s.edition, 'preview', s.sendDate))) {
         const { html, eventCount, suggestionCount } = renderNewsletter({ venue, mode: 'preview', edition: s.edition, sendDateIso: s.sendDate, origin });
         let result = { sent: false, reason: 'dry_run' };
         if (!dry) {
@@ -132,7 +134,7 @@ export async function onRequestPost({ request, env }) {
         actions.push({ venue: venue.email, edition: s.edition, sendDate: s.sendDate, action: 'preview', eventCount, suggestionCount, ...result });
       }
 
-      if (tMinus === 0 && !(await alreadyLogged(env, venue.email, s.edition, 'send_dress_rehearsal', s.sendDate))) {
+      if (tMinus <= 0 && tMinus >= -1 && !(await alreadyLogged(env, venue.email, s.edition, 'send_dress_rehearsal', s.sendDate))) {
         const { html, eventCount } = renderNewsletter({ venue, mode: 'final', edition: s.edition, sendDateIso: s.sendDate, origin });
         const name = venue.brand?.venue_display_name || venue.venue_name || venue.email;
         let result = { sent: false, reason: 'dry_run' };
